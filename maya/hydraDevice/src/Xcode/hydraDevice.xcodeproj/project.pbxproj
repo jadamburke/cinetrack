@@ -9,15 +9,15 @@
 /* Begin PBXBuildFile section */
 		100000000000000000000002 /* hydraDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* hydraDevice.cpp */; };
 		100000000000000000000004 /* api_macros.h in Headers */ = {isa = PBXBuildFile; fileRef = 100000000000000000000003 /* api_macros.h */; };
-		66FE388D1839B25B00F1FBDD /* libsixense_utils_x64.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 66FE388C1839B25B00F1FBDD /* libsixense_utils_x64.dylib */; };
-		66FE388F1839B26100F1FBDD /* libsixense_x64.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 66FE388E1839B26100F1FBDD /* libsixense_x64.dylib */; };
+		66443D01183A906B00B4A8E9 /* libsixense_utils_x64.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 66443D00183A906B00B4A8E9 /* libsixense_utils_x64.dylib */; };
+		66443D03183A907300B4A8E9 /* libsixense_x64.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 66443D02183A907300B4A8E9 /* libsixense_x64.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		100000000000000000000001 /* hydraDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hydraDevice.cpp; sourceTree = "<group>"; };
-		100000000000000000000003 /* api_macros.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = api_macros.h; sourceTree = "<group>"; };
-		66FE388C1839B25B00F1FBDD /* libsixense_utils_x64.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libsixense_utils_x64.dylib; sourceTree = "<group>"; };
-		66FE388E1839B26100F1FBDD /* libsixense_x64.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libsixense_x64.dylib; sourceTree = "<group>"; };
+		100000000000000000000001 /* hydraDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hydraDevice.cpp; path = ../src/hydraDevice.cpp; sourceTree = "<group>"; };
+		100000000000000000000003 /* api_macros.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = api_macros.h; path = ../src/api_macros.h; sourceTree = "<group>"; };
+		66443D00183A906B00B4A8E9 /* libsixense_utils_x64.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsixense_utils_x64.dylib; path = ../../lib/osx_x64/release_dll/libsixense_utils_x64.dylib; sourceTree = "<group>"; };
+		66443D02183A907300B4A8E9 /* libsixense_x64.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsixense_x64.dylib; path = ../../lib/osx_x64/release_dll/libsixense_x64.dylib; sourceTree = "<group>"; };
 		D2AAC0630554660B00DB518D /* hydraDevice.bundle */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = hydraDevice.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -26,8 +26,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				66FE388D1839B25B00F1FBDD /* libsixense_utils_x64.dylib in Frameworks */,
-				66FE388F1839B26100F1FBDD /* libsixense_x64.dylib in Frameworks */,
+				66443D01183A906B00B4A8E9 /* libsixense_utils_x64.dylib in Frameworks */,
+				66443D03183A907300B4A8E9 /* libsixense_x64.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -37,8 +37,8 @@
 		08FB7794FE84155DC02AAC07 /* randomizerDevicePlugin */ = {
 			isa = PBXGroup;
 			children = (
-				66FE388E1839B26100F1FBDD /* libsixense_x64.dylib */,
-				66FE388C1839B25B00F1FBDD /* libsixense_utils_x64.dylib */,
+				66443D02183A907300B4A8E9 /* libsixense_x64.dylib */,
+				66443D00183A906B00B4A8E9 /* libsixense_utils_x64.dylib */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				8A7F063208688F460064D097 /* Mel */,
 				8A7F063308688F580064D097 /* Resources */,
@@ -50,8 +50,8 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				100000000000000000000001 /* hydraDevice.cpp */,
 				100000000000000000000003 /* api_macros.h */,
+				100000000000000000000001 /* hydraDevice.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -158,12 +158,12 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_MASTER_OBJECT_FILE = NO;
-				INSTALL_PATH = /usr/local/lib;
+				INSTALL_PATH = "\"$(SRCROOT)/../../build/osx_x64/release_dll\"";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(MAYA_DIRECTORY)/Maya.app/Contents/MacOS",
-					/Volumes/res/dev/vrPrevis/sixenseSDK_linux_OSX/lib/OSX_x64/release_dll/,
 					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/../../lib/osx_x64/release_dll\"",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"/Volumes/res/dev/vrPrevis/sixenseSDK_linux_OSX/lib/OSX_x64/release_dll\"";
 				LIBRARY_STYLE = BUNDLE;
@@ -171,10 +171,11 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
-				PRELINK_LIBS = "/Volumes/res/dev/vrPrevis/sixenseSDK_linux_OSX/lib/OSX_x64/debug_dll/libsixense_utilsd_x64.dylib /Volumes/res/dev/vrPrevis/sixenseSDK_linux_OSX/lib/OSX_x64/debug_dll/libsixensed_x64.dylib";
+				PRELINK_LIBS = "";
 				PRODUCT_NAME = hydraDevice;
 				SDKROOT = macosx10.6;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../sixenseSDK_linux_OSX/include $(SRCROOT)/../sixenseSDK_linux_OSX/include/sixense_utils";
+				SYMROOT = build;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)../src $(SRCROOT)/../../include $(SRCROOT)/../include";
 				ZERO_LINK = YES;
 			};
 			name = Debug;
@@ -193,12 +194,12 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_MASTER_OBJECT_FILE = NO;
-				INSTALL_PATH = /usr/local/lib;
+				INSTALL_PATH = "\"$(SRCROOT)/../../build/osx_x64/release_dll\"";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(MAYA_DIRECTORY)/Maya.app/Contents/MacOS",
-					/Volumes/res/dev/vrPrevis/sixenseSDK_linux_OSX/lib/OSX_x64/release_dll/,
 					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/../../lib/osx_x64/release_dll\"",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"/Volumes/res/dev/vrPrevis/sixenseSDK_linux_OSX/lib/OSX_x64/release_dll\"";
 				LIBRARY_STYLE = BUNDLE;
@@ -206,10 +207,11 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
-				PRELINK_LIBS = "/Volumes/res/dev/vrPrevis/sixenseSDK_linux_OSX/lib/OSX_x64/debug_dll/libsixense_utilsd_x64.dylib /Volumes/res/dev/vrPrevis/sixenseSDK_linux_OSX/lib/OSX_x64/debug_dll/libsixensed_x64.dylib";
+				PRELINK_LIBS = "";
 				PRODUCT_NAME = hydraDevice;
 				SDKROOT = macosx10.6;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../sixenseSDK_linux_OSX/include $(SRCROOT)/../sixenseSDK_linux_OSX/include/sixense_utils";
+				SYMROOT = build;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)../src $(SRCROOT)/../../include $(SRCROOT)/../include";
 				ZERO_LINK = NO;
 			};
 			name = Release;

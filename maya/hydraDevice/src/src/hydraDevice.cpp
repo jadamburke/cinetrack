@@ -16,8 +16,8 @@
 
 /*
 	// MEL:
-	loadPlugin randomizerDevice;
-	string $node = `createNode randomizerDevice`;
+	loadPlugin hydraDevice;
+	string $node = `createNode hydraDevice`;
 	string $cube[] = `polyCube`;
 	connectAttr ( $node + ".outputTranslate" ) ( $cube[0] + ".translate" );
 	setAttr ( $node + ".live" ) 1;
@@ -28,7 +28,7 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MTypeId.h>
 
-#include <api_macros.h>
+#include "api_macros.h"
 #include <maya/MIOStream.h>
 
 #include <maya/MPlug.h>
@@ -58,12 +58,12 @@ static bool controller_manager_screen_visible = true;
 std::string controller_manager_text_string;
 
 
-class randomizerDeviceNode : public MPxThreadedDeviceNode
+class hydraDeviceNode : public MPxThreadedDeviceNode
 {
 
 public:
-						randomizerDeviceNode();
-	virtual 			~randomizerDeviceNode();
+						hydraDeviceNode();
+	virtual 			~hydraDeviceNode();
 	
 	virtual void		postConstructor();
 	virtual MStatus		compute( const MPlug& plug, MDataBlock& data );
@@ -85,26 +85,26 @@ public:
 private:
 };
 
-MTypeId randomizerDeviceNode::id( 0x00081051 );
-MObject randomizerDeviceNode::outputTranslate;
-MObject randomizerDeviceNode::outputTranslateX;
-MObject randomizerDeviceNode::outputTranslateY;
-MObject randomizerDeviceNode::outputTranslateZ;
+MTypeId hydraDeviceNode::id( 0x00081051 );
+MObject hydraDeviceNode::outputTranslate;
+MObject hydraDeviceNode::outputTranslateX;
+MObject hydraDeviceNode::outputTranslateY;
+MObject hydraDeviceNode::outputTranslateZ;
 
-randomizerDeviceNode::randomizerDeviceNode() 
+hydraDeviceNode::hydraDeviceNode() 
 {
 
 }
 
-randomizerDeviceNode::~randomizerDeviceNode()
+hydraDeviceNode::~hydraDeviceNode()
 {
 	destroyMemoryPools();
 }
 
-void randomizerDeviceNode::postConstructor()
+void hydraDeviceNode::postConstructor()
 {
 	MObjectArray attrArray;
-	attrArray.append( randomizerDeviceNode::outputTranslate );
+	attrArray.append( hydraDeviceNode::outputTranslate );
 	setRefreshOutputAttributes( attrArray );
 
 	// we'll be reading one set of translate x,y, z's at a time
@@ -124,7 +124,7 @@ static double getRandomX()
 	return ( i / RAND_MAX ) * kScale;
 }
 
-void randomizerDeviceNode::threadHandler()
+void hydraDeviceNode::threadHandler()
 {
 	MStatus status;
 	setDone( false );
@@ -176,18 +176,18 @@ void randomizerDeviceNode::threadHandler()
 	setDone( true );
 }
 
-void randomizerDeviceNode::threadShutdownHandler()
+void hydraDeviceNode::threadShutdownHandler()
 {
 	// Stops the loop in the thread handler
 	setDone( true );
 }
 
-void* randomizerDeviceNode::creator()
+void* hydraDeviceNode::creator()
 {
-	return new randomizerDeviceNode;
+	return new hydraDeviceNode;
 }
 
-MStatus randomizerDeviceNode::initialize()
+MStatus hydraDeviceNode::initialize()
 {
 
 	MStatus status;
@@ -211,7 +211,7 @@ MStatus randomizerDeviceNode::initialize()
 	return MS::kSuccess;
 }
 
-MStatus randomizerDeviceNode::compute( const MPlug& plug, MDataBlock& block )
+MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
 {
 	MStatus status;
 	if( plug == outputTranslate || plug == outputTranslateX ||
@@ -249,13 +249,13 @@ MStatus initializePlugin( MObject obj )
 	MStatus status;
 	MFnPlugin plugin(obj, PLUGIN_COMPANY, "3.0", "Any");
 
-	status = plugin.registerNode( "randomizerDevice", 
-								  randomizerDeviceNode::id,
-								  randomizerDeviceNode::creator,
-								  randomizerDeviceNode::initialize,
+	status = plugin.registerNode( "hydraDevice", 
+								  hydraDeviceNode::id,
+								  hydraDeviceNode::creator,
+								  hydraDeviceNode::initialize,
 								  MPxNode::kThreadedDeviceNode );
 	if( !status ) {
-		status.perror("failed to registerNode randomizerDeviceNode");
+		status.perror("failed to registerNode hydraDeviceNode");
 	}
 
 	return status;
@@ -266,9 +266,9 @@ MStatus uninitializePlugin( MObject obj )
 	MStatus status;
 	MFnPlugin plugin(obj);
 
-	status = plugin.deregisterNode( randomizerDeviceNode::id );
+	status = plugin.deregisterNode( hydraDeviceNode::id );
 	if( !status ) {
-		status.perror("failed to deregisterNode randomizerDeviceNode");
+		status.perror("failed to deregisterNode hydraDeviceNode");
 	}
 
 	return status;
