@@ -28,6 +28,10 @@
 
 
 	setAttr ( $node + ".live" ) 1;
+ 
+ recordAttr -at "translateX" -at "translateY" -at "translateZ";
+ recordAttr -at "rotateX" -at "rotateY" -at "rotateZ";
+ play -rec;
 */
 
 #include <stdlib.h>
@@ -192,102 +196,60 @@ void hydraDeviceNode::threadHandler()
 		beginThreadLoop();
 		{
             
+            const double pi = 3.14159265358979323846; // CHANGE THIS TO LIBRARY CONST
+            const double world_scale = 0.02;
+            
             //printf ("%s \n", "Getting Data");
             sixenseSetActiveBase(0);
             sixenseAllControllerData acd;
             sixenseGetAllNewestData( &acd );
+            
             sixenseUtils::getTheControllerManager()->update( &acd );
             
+			double p_x = (double)acd.controllers[0].pos[0]; 
+			double p_y = (double)acd.controllers[0].pos[1]; 
+			double p_z = (double)acd.controllers[0].pos[2];   
+            acd.controllers[0].hemi_tracking_enabled = 1;
             
+            double q_x = (double)acd.controllers[0].rot_quat[0];
+            double q_y = (double)acd.controllers[0].rot_quat[1];
+            double q_z = (double)acd.controllers[0].rot_quat[2];
+            double q_w = (double)acd.controllers[0].rot_quat[3];
+            
+            // just making these as vector objects incase i want to do some vector math
+            MVector p_vec;
+            p_vec.x = p_x;
+            p_vec.y = p_y;
+            p_vec.z = p_z;
+            
+            // just making these as vector objects incase i want to do some vector math
+            MVector q_vec;
+            q_vec.x = q_x;
+            q_vec.y = q_y;
+            q_vec.z = q_z;
 
-            
-            double m_x = (double)acd.controllers[0].rot_quat[0];
-            double m_y = (double)acd.controllers[0].rot_quat[1];
-            double m_z = (double)acd.controllers[0].rot_quat[2];
-            double m_w = (double)acd.controllers[0].rot_quat[3];
-            
-            //MQuaternion	(	double 	xx,yy,zz,ww )	
+
             MQuaternion quat;
-            quat.x = m_x;
-            quat.y = m_y;
-            quat.z = m_z;
-            quat.w = m_w;
-            MVector vec = quat.asEulerRotation().asVector();
-            const double pi = 3.14159265358979323846;
+            quat.x = q_vec.x;
+            quat.y = q_vec.y;
+            quat.z = q_vec.z;
+            quat.w = q_w;
+            
+            // resolve as xyz euler rotations
+            MEulerRotation euler = quat.asEulerRotation();
+            
+            euler.reorderIt(MEulerRotation::kZXY);
+            MVector er_vec = euler.asVector();
+            
 
-            // found algorithm for quaternion to zxy rotation order which provides ideal euler angles for 
-            // camera systems wherby roll (z) is the least likely to rotate more than 90 degrees
-            
-            // for some reason the yaw is skewed towards the base station, might need to use the position
-            // vector to compensate the quaternion vector
-            
-            /*
-            double yaw;
-            double pitch;
-            double roll;
-            
-            const double w2 = m_w*m_w;
-            const double x2 = m_x*m_x;
-            const double y2 = m_y*m_y;
-            const double z2 = m_z*m_z;
-            const double unitLength = w2 + x2 + y2 + z2;    // Normalised == 1, otherwise correction divisor.
-            const double abcd = m_w*m_x + m_y*m_z;
-            const double eps = 1e-7;    // TODO: pick from your math lib instead of hardcoding.
-            const double pi = 3.14159265358979323846;   // TODO: pick from your math lib instead of hardcoding.
-            if (abcd > (0.5-eps)*unitLength)
-            {
-                yaw = 2 * atan2(m_y, m_w);
-                pitch = pi;
-                roll = 0;
-            }
-            else if (abcd < (-0.5+eps)*unitLength)
-            {
-                yaw = -2 * ::atan2(m_y, m_w);
-                pitch = -pi;
-                roll = 0;
-            }
-            else
-            {
-                const double adbc = m_w*m_z - m_x*m_y;
-                const double acbd = m_w*m_y - m_x*m_z;
-                yaw = ::atan2(2*adbc, 1 - 2*(z2+x2));
-                pitch = ::asin(2*abcd/unitLength);
-                roll = ::atan2(2*acbd, 1 - 2*(y2+x2));
-            }
-           
-            yaw *= (180/pi);
-            pitch *= (180/pi);
-            roll *= (180/pi);
-            
-            
-            // rotation order = zxy zyx
-            
-            // yaw
-            //double rotx = atan2(2*((m_w * m_x) + (m_y * m_z)), 1 - (2 * ((m_x* m_x) + (m_y * m_y)))) * (180/3.141596);
-            // pitch
-            //double roty = asin(2 * ((m_w * m_y) - (m_z * m_x))) * (180/3.141596);
-            // roll
-            //double rotz = atan2(2 * ((m_w * m_z) + (m_x * m_y)), 1 - (2 * ((m_y * m_y) + (m_z * m_z)))) * (180/3.141596);
-            
-            /*
-            // yaw
-            double rotx = atan2(2*((m_w * m_x) + (m_y * m_z)), 1 - (2 * ((m_x* m_x) + (m_y * m_y)))) * (180/3.141596);
-            // pitch
-            double roty = asin(2 * ((m_w * m_y) - (m_z * m_x))) * (180/3.141596);
-            // roll
-            double rotz = atan2(2 * ((m_w * m_z) + (m_x * m_y)), 1 - (2 * ((m_y * m_y) + (m_z * m_z)))) * (180/3.141596);     
-             */       
             double* doubleData = reinterpret_cast<double*>(buffer.ptr());
-			doubleData[0] = (double)acd.controllers[0].pos[0] *.01; 
-			doubleData[1] = (double)acd.controllers[0].pos[1] *.01; 
-			doubleData[2] = (double)acd.controllers[0].pos[2] *.01;
-            
-			//doubleData[3] = (double)pitch; 
-			//doubleData[4] = (double)yaw; 
-			//doubleData[5] = (double)roll; 
-            doubleData[3] = (double)vec.x * (180/pi); 
-			doubleData[4] = (double)vec.y * (180/pi); 
- 			doubleData[5] = (double)vec.z * (180/pi); 
+			doubleData[0] = (double)p_vec.x * world_scale; 
+			doubleData[1] = (double)p_vec.y * world_scale*2; // for some reason y is squished? 
+			doubleData[2] = (double)p_vec.z * world_scale;
+             
+            doubleData[3] = (double)er_vec.x * (180/pi); 
+			doubleData[4] = (double)er_vec.y * (180/pi); 
+ 			doubleData[5] = (double)er_vec.z * (180/pi); 
             
             
             doubleData[6] = (double)acd.controllers[0].rot_quat[0];
