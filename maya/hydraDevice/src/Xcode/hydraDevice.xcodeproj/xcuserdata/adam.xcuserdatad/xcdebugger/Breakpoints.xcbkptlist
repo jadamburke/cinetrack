@@ -14,8 +14,8 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "198"
          endingLineNumber = "198"
-         landmarkName = "hydraDeviceNode::threadHandler()"
-         landmarkType = "5">
+         landmarkName = "getRandomX()"
+         landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "No"
@@ -28,8 +28,8 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "205"
          endingLineNumber = "205"
-         landmarkName = "hydraDeviceNode::threadHandler()"
-         landmarkType = "5">
+         landmarkName = "getRandomX()"
+         landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "Yes"

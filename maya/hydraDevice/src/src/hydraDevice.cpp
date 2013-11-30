@@ -29,20 +29,92 @@
 
 	setAttr ( $node + ".live" ) 1;
  
+ 
  $r = `createNode record`;
- connectAttr camera1.tx ($r+".input");
+ connectAttr null1.hydraTranslateX ($r+".input");
  $r = `createNode record`;
- connectAttr camera1.ty ($r+".input");
+ connectAttr null1.hydraTranslateY ($r+".input");
  $r = `createNode record`;
- connectAttr camera1.tz ($r+".input");
+ connectAttr null1.hydraTranslateZ ($r+".input");
  $r = `createNode record`;
- connectAttr camera1.rx ($r+".input");
+ connectAttr null1.hydraRotateX ($r+".input");
  $r = `createNode record`;
- connectAttr camera1.ry ($r+".input");
+ connectAttr null1.hydraRotateY ($r+".input");
  $r = `createNode record`;
- connectAttr camera1.rz ($r+".input");
+ connectAttr null1.hydraRotateZ ($r+".input");
+ $r = `createNode record`;
+ connectAttr null1.hydraZoomX ($r+".input");
+ $r = `createNode record`;
+ connectAttr null1.hydraZoomY ($r+".input");
+ $r = `createNode record`;
+ connectAttr null1.hydraZoomZ ($r+".input");
  
  play -rec;
+ 
+ 
+ // create a script job to watch for button events on the hydraDevice
+ global proc hydraButtonWatch(){
+ float $btnVal = `getAttr hydraDevice1.outputButtons`;
+ if ($btnVal != 0){
+ // do rehersal pass (no recording)
+ if ($btnVal == 0.01){
+ currentTime -e `playbackOptions -q -min`;
+ if (`play -q -st` == true) play -st false;
+ else play -st true;
+ }
+ // do recording pass
+ else if ($btnVal == 0.1){
+ // backup current take data
+ // duplicate anim curve and transform
+ // rename duplicates
+ // connect them together
+ currentTime -e `playbackOptions -q -min`;
+ //play -rec;
+ }
+ print ($btnVal+" button value!\n");
+ }
+ 
+ }// end proc
+ scriptJob -runOnce false -killWithScene true -attributeChange hydraDevice1.outputButtons hydraButtonWatch;
+ scriptJob -runOnce false -killWithScene true -ev playingBack sixensePlayIntterupt;
+ 
+ // used to detect button presses while playing back
+ global proc sixensePlayIntterupt(){
+ float $btnVal = `getAttr hydraDevice1.outputButtons`;
+ if ($btnVal == 0.01){
+ play -st false;
+ }
+ 
+ }
+ 
+ // creates a copy of the hydraAnimData null along with animation curves
+ global proc sixenseDuplicateTakeRecNode (){
+ // find the active data
+ // find the animation cuves connected to data
+ // duplicate them
+ // rename them to a standardized naming system
+ 
+ }
+ 
+ global proc sixenseChangeTake (string $takeRecNode){
+ // connects the active takeRecNode attrs to the specified takeRecNode.
+ // check to see if it has valid attribute & if they are animated
+ // 
+ 
+ }
+ 
+ // creates an active take and connects it to the hydra device
+ // also attaches the record nodes
+ global proc sixenseCreateActiveTake () {
+ 
+ }
+ 
+ global proc sixenseRemoveAllRecordNodes (){
+ 
+ 
+ 
+ }
+
 */
 
 #include <stdlib.h>
@@ -126,10 +198,14 @@ public:
     static MObject      offsetRotateX;
     static MObject      offsetRotateY;
     static MObject      offsetRotateZ;
+    static MObject      zoom;
     static MObject      zoomX;
     static MObject      zoomY;
+    static MObject      zoomZ;
+    static MObject      zoomSpeed;
     static MObject      zoomSpeedX;
     static MObject      zoomSpeedY;
+    static MObject      zoomSpeedZ;
 
 	static MTypeId		id;
 
@@ -160,11 +236,15 @@ MObject hydraDeviceNode::offsetRotate;
 MObject hydraDeviceNode::offsetRotateX;
 MObject hydraDeviceNode::offsetRotateY;
 MObject hydraDeviceNode::offsetRotateZ;
-
+MObject hydraDeviceNode::zoom;
 MObject hydraDeviceNode::zoomX;
 MObject hydraDeviceNode::zoomY;
+MObject hydraDeviceNode::zoomZ;
+MObject hydraDeviceNode::zoomSpeed;
 MObject hydraDeviceNode::zoomSpeedX;
 MObject hydraDeviceNode::zoomSpeedY;
+MObject hydraDeviceNode::zoomSpeedZ;
+
 
 
 hydraDeviceNode::hydraDeviceNode() 
@@ -218,6 +298,8 @@ void hydraDeviceNode::threadHandler()
 	printf ("%s \n", "Hydra Input Device for Maya, version 0.1");
 	printf ("%s \n", "Author: Evan Harper (harper4@gmail.com), Adam Burke (adam@adamburke.net), Nov 2013");
 
+    //sixenseSetFilterEnabled(1);
+    //sixenseSetFilterParams(.2, 0, 1, .1);
     
     
 	while ( ! isDone() )
@@ -408,15 +490,21 @@ MStatus hydraDeviceNode::initialize()
     
     zoomX = numAttr.create("zoomX", "zx", MFnNumericData::kDouble, 0.0, &status);
     MCHECKERROR(status, "create zoomX");
-    
     zoomY = numAttr.create("zoomY", "zy", MFnNumericData::kDouble, 0.0, &status);
     MCHECKERROR(status, "create zoomY");
+    zoomZ = numAttr.create("zoomZ", "zz", MFnNumericData::kDouble, 0.0, &status);
+    MCHECKERROR(status, "create zoomZ");
+	zoom = numAttr.create("zoom", "z", zoomX, zoomY, zoomZ, &status);
+    MCHECKERROR(status, "create zoom");
 
     zoomSpeedX = numAttr.create("zoomSpeedX", "zsx", MFnNumericData::kDouble, 0.0, &status);
     MCHECKERROR(status, "create zoomSpeedX");
-    
     zoomSpeedY = numAttr.create("zoomSpeedY", "zsy", MFnNumericData::kDouble, 0.0, &status);
     MCHECKERROR(status, "create zoomSpeedY");
+    zoomSpeedZ = numAttr.create("zoomSpeedZ", "zsz", MFnNumericData::kDouble, 0.0, &status);
+    MCHECKERROR(status, "create zoomSpeedZ");
+	zoomSpeed = numAttr.create("zoomSpeed", "zs", zoomSpeedX, zoomSpeedY, zoomSpeedZ, &status);
+    MCHECKERROR(status, "create zoomSpeed");
     
 
 	ADD_ATTRIBUTE(outputTranslate);
@@ -426,10 +514,8 @@ MStatus hydraDeviceNode::initialize()
     ADD_ATTRIBUTE(outputTrigger);
     ADD_ATTRIBUTE(outputButtons);
     ADD_ATTRIBUTE(outputJoystick);
-    ADD_ATTRIBUTE(zoomX);
-    ADD_ATTRIBUTE(zoomY);
-    ADD_ATTRIBUTE(zoomSpeedX);
-    ADD_ATTRIBUTE(zoomSpeedY);
+    ADD_ATTRIBUTE(zoom);
+    ADD_ATTRIBUTE(zoomSpeed);
     
 	ATTRIBUTE_AFFECTS( live, outputTranslate);
 	ATTRIBUTE_AFFECTS( frameRate, outputTranslate);
@@ -437,8 +523,7 @@ MStatus hydraDeviceNode::initialize()
     ATTRIBUTE_AFFECTS( outputTranslate, outputTrigger);
     ATTRIBUTE_AFFECTS( outputTranslate, outputButtons);
     ATTRIBUTE_AFFECTS( outputTranslate, outputJoystick);
-    ATTRIBUTE_AFFECTS( outputTranslate, zoomX);
-    ATTRIBUTE_AFFECTS( outputTranslate, zoomY);
+    ATTRIBUTE_AFFECTS( outputTranslate, zoom);
 
 	return MS::kSuccess;
 }
@@ -472,17 +557,12 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
             MDataHandle outputJoystickHandle = block.outputValue( outputJoystick, &status );
             MCHECKERROR(status, "Error in block.outputValue for outputJoystick");
             
-            MDataHandle zoomXHandle = block.outputValue( zoomX, &status );
-            MCHECKERROR(status, "Error in block.outputValue for zoomXHandle");
+            MDataHandle zoomHandle = block.outputValue( zoom, &status );
+            MCHECKERROR(status, "Error in block.outputValue for zoomHandle");
 			
-            MDataHandle zoomSpeedXHandle = block.outputValue( zoomSpeedX, &status );
-            MCHECKERROR(status, "Error in block.outputValue for zoomSpeedXHandle");
-            
-            MDataHandle zoomYHandle = block.outputValue( zoomY, &status );
-            MCHECKERROR(status, "Error in block.outputValue for zoomYHandle");
-			
-            MDataHandle zoomSpeedYHandle = block.outputValue( zoomSpeedY, &status );
-            MCHECKERROR(status, "Error in block.outputValue for zoomSpeedYHandle");            
+            MDataHandle zoomSpeedHandle = block.outputValue( zoomSpeed, &status );
+            MCHECKERROR(status, "Error in block.outputValue for zoomSpeedHandle");
+                     
             
 			double3& outputTranslate = outputTranslateHandle.asDouble3();
 			outputTranslate[0] = (double)doubleData[0];
@@ -505,15 +585,12 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
 			outputJoystick[1] = (double)doubleData[9];
 			outputJoystick[2] = 0;
             
-            double& zoomSpeedX = zoomSpeedXHandle.asDouble();
+            double3& zoomSpeed = zoomSpeedHandle.asDouble3();
             
-            double& zoomX = zoomXHandle.asDouble();
-            zoomX = zoomX + (doubleData[8] * (zoomX/35 * zoomSpeedX));
-            
-            double& zoomSpeedY = zoomSpeedYHandle.asDouble();
-            
-            double& zoomY = zoomYHandle.asDouble();
-            zoomY = zoomY + (doubleData[9] * (zoomY/35 * zoomSpeedY));
+            double3& zoom = zoomHandle.asDouble3();
+            zoom[0] = zoom[0] + (doubleData[8] * (zoom[0]/35 * zoomSpeed[0]));
+            zoom[1] = zoom[1] + (doubleData[9] * (zoom[1]/35 * zoomSpeed[1]));            
+            zoom[2] = 0;
             
 			block.setClean( plug );
             
