@@ -69,13 +69,13 @@
  // rename duplicates
  // connect them together
  currentTime -e `playbackOptions -q -min`;
- //play -rec;
+ play -rec;
  }
  print ($btnVal+" button value!\n");
  }
  
  }// end proc
- scriptJob -runOnce false -killWithScene true -attributeChange hydraDevice1.outputButtons hydraButtonWatch;
+ scriptJob -runOnce false  -killWithScene -attributeChange hydraDevice1.outputButtons hydraButtonWatch;
  scriptJob -runOnce false -killWithScene true -ev playingBack sixensePlayIntterupt;
  
  // used to detect button presses while playing back
@@ -122,6 +122,7 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MTypeId.h>
 #include <maya/MEulerRotation.h>
+#include <maya/MAnimControl.h>
 
 #include <maya/MQuaternion.h>
 #include <maya/MMatrix.h>
@@ -172,6 +173,7 @@ public:
 
 	static void*		creator();
 	static MStatus		initialize();
+    static MStatus      togglePlayback();
 
 public:
 
@@ -264,7 +266,7 @@ void hydraDeviceNode::postConstructor()
 	setRefreshOutputAttributes( attrArray );
 
 	// we'll be reading one set of translate x,y, z's at a time
-	createMemoryPools( 24, 10, sizeof(double));
+	createMemoryPools( 2, 10, sizeof(double));
     
     //createMemoryPools (12, 3, sizeof(Ptr)) ;
 }
@@ -406,11 +408,25 @@ void hydraDeviceNode::threadHandler()
             doubleData[8] = (double)acd.controllers[0].joystick_x;
             doubleData[9] = (double)acd.controllers[0].joystick_y;
             
+            
 			pushThreadData( buffer );
 		}
 		endThreadLoop();
 	}
 	setDone( true );
+}
+
+MStatus hydraDeviceNode::togglePlayback()
+{
+    MStatus status;
+        MAnimControl anim;
+        if (anim.isPlaying){
+            status = anim.stop();
+        }
+        else{
+            status = anim.playForward();
+        }
+    return status;
 }
 
 void hydraDeviceNode::threadShutdownHandler()
@@ -524,6 +540,8 @@ MStatus hydraDeviceNode::initialize()
     ATTRIBUTE_AFFECTS( outputTranslate, outputButtons);
     ATTRIBUTE_AFFECTS( outputTranslate, outputJoystick);
     ATTRIBUTE_AFFECTS( outputTranslate, zoom);
+    
+
 
 	return MS::kSuccess;
 }
@@ -537,6 +555,13 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
        plug == outputRotateY || plug == outputRotateZ)
 	{
 		MCharBuffer buffer;
+        //long i;
+        //long poolCount = threadDataCount();
+        //if (poolCount > 1){
+        //    for (i=0;i<poolCount-1;i++){
+        //        popThreadData(buffer);
+        //    }
+        //}
 		if ( popThreadData(buffer) )
 		{
 			double* doubleData = reinterpret_cast<double*>(buffer.ptr());
@@ -592,9 +617,14 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
             zoom[1] = zoom[1] + (doubleData[9] * (zoom[1]/35 * zoomSpeed[1]));            
             zoom[2] = 0;
             
+            
 			block.setClean( plug );
             
 			releaseDataStorage(buffer);
+            
+            if (outputButtons == 0.001){
+                togglePlayback();
+            }
 			return ( MS::kSuccess );
 		}
 		else

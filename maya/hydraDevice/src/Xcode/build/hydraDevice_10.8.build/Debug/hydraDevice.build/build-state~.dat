@@ -1,0 +1,196 @@
+ThydraDevice
+v6
+r1
+cCheck dependencies
+cProcessPCH++ /var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.pch /Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cCompileC build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.o /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cLd /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug/hydraDevice.bundle normal x86_64
+
+N/Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h
+c0000000051E68DFE0000000000000C07
+t1374064126
+s3079
+
+N/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
+c000000005228144B00000000000000AA
+t1378358347
+s170
+
+N/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/SDKSettings.plist
+c00000000529CAD6300000000000004B3
+t1385999715
+s1203
+
+N/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/CoreServices/SystemVersion.plist
+c00000000529CAD6300000000000001DE
+t1385999715
+s478
+
+N/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/lib/osx_x64/release_dll/libsixense_utils_x64.dylib
+c00000000529CAF4B000000000003E4D8
+t1386000203
+s255192
+
+N/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/lib/osx_x64/release_dll/libsixense_x64.dylib
+c00000000529CAF4B0000000000088374
+t1386000203
+s557940
+
+N/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug/hydraDevice.bundle
+t2
+s0
+
+N/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.LinkFileList
+c00000000529CB896000000000000009F
+t1386002582
+s159
+
+N/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.o
+t1386002585
+s252608
+
+N/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp
+c00000000529CAF4C0000000000005531
+t1386000204
+s21809
+
+N/var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.pch
+t1386002584
+s7182928
+
+CBuild AST from /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp
+r0
+
+CCheck dependencies
+r0
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection18"Check dependencies18"Check dependencies45d7b116f04cb841^e3c5de16f04cb841^---0#1#1#--18"Check dependencies36"C0DD7B4E-8706-4476-A1FF-3776CACFA80B-
+
+CCompileC build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.o /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s407695384.764223
+e407695385.664603
+r1
+xCompileC
+xbuild/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.o
+x/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp
+d/Applications/Autodesk/maya2014/devkit/include/maya/MFnPlugin.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MFnBase.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MFn.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MStatus.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MTypes.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MIOStream.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MIOStreamFwd.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MApiVersion.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MPxNode.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MObject.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MTypeId.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MDataHandle.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MFnNumericData.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MFnData.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MDataBlock.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MArrayDataHandle.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MArrayDataBuilder.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MPlug.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MDGContext.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MIntArray.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MString.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MPxData.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MEulerRotation.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MTransformationMatrix.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MQuaternion.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MMatrix.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MVector.h
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/api_macros.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MFnNumericAttribute.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MFnAttribute.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MPxThreadedDeviceNode.h
+d/Applications/Autodesk/maya2014/devkit/include/maya/MObjectArray.h
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense.h
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_math.hpp
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_math.cpp
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/derivatives.hpp
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/export.hpp
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/interfaces.hpp
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/button_states.hpp
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/event_triggers.hpp
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/controller_manager/controller_manager.hpp
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/sixense_utils_string.hpp
+oIn file included from /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp:150:
+o/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../../include/sixense_utils/event_triggers.hpp:45:4: warning: delete called on 'const sixenseUtils::EventTriggerBase' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]
+o                        delete _positive_transition_event;
+o                        ^
+o/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../../include/sixense_utils/event_triggers.hpp:46:4: warning: delete called on 'const sixenseUtils::EventTriggerBase' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]
+o                        delete _negative_transition_event;
+o                        ^
+o2 warnings generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection91"Compile /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp243"CompileC build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.o /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler6cb5c318f04cb841^7022aa19f04cb841^-831"In file included from /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp:150:/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../../include/sixense_utils/event_triggers.hpp:45:4: warning: delete called on 'const sixenseUtils::EventTriggerBase' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]                        delete _positive_transition_event;                        ^/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../../include/sixense_utils/event_triggers.hpp:46:4: warning: delete called on 'const sixenseUtils::EventTriggerBase' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]                        delete _negative_transition_event;                        ^2 warnings generated.2(36%IDEClangDiagnosticActivityLogMessage2@103"Delete called on 'const sixenseUtils::EventTriggerBase' that is abstract but has non-virtual destructor-407695385#18446744073709551615#0#1(2@110"In file included from /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp:150:-407695385#18446744073709551615#0#-0#27"com.apple.dt.IDE.diagnostic23%DVTTextDocumentLocation3@99"file://localhost/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp0000000000000000^149#9#149#9#4138#0#21"Apple LLVM 5.0 Notice--1#27"com.apple.dt.IDE.diagnostic3@116"file://localhost/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/event_triggers.hpp0000000000000000^44#3#44#3#1184#0#14"Semantic Issue--2@103"Delete called on 'const sixenseUtils::EventTriggerBase' that is abstract but has non-virtual destructor-407695385#18446744073709551615#0#1(2@110"In file included from /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp:150:-407695385#18446744073709551615#0#-0#27"com.apple.dt.IDE.diagnostic3@99"file://localhost/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp0000000000000000^149#9#149#9#4138#0#21"Apple LLVM 5.0 Notice--1#27"com.apple.dt.IDE.diagnostic3@116"file://localhost/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/include/sixense_utils/event_triggers.hpp0000000000000000^45#3#45#3#1222#0#14"Semantic Issue--0#0#1#-19%DVTDocumentLocation4@99"file://localhost/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp0000000000000000^3120"CompileC build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.o /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode    setenv LANG en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wno-unused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wno-empty-body -Wno-uninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wno-constant-conversion -Wno-int-conversion -Wno-bool-conversion -Wno-enum-conversion -Wno-shorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DMAC_PLUGIN -D_BOOL -DREQUIRE_IOSTREAM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.8 -g -fvisibility-inlines-hidden -Wno-sign-conversion -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/hydraDevice.hmap -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode../src -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../../include -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../include -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug/include -I. -I/Applications/Autodesk/maya2014/devkit/include -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/DerivedSources/x86_64 -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/DerivedSources -F/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug -include /var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h -MMD -MT dependencies -MF /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.d --serialize-diagnostics /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.dia -c /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/src/hydraDevice.cpp -o /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.o36"2FBB8246-FA2D-4D41-B5CD-05F17D2E12B8-
+bEE551A24-CDDB-4628-8A5B-15EEE9D90ED4
+
+CLd /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug/hydraDevice.bundle normal x86_64
+s407695385.672982
+e407695386.136222
+r1
+xLd
+x/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug/hydraDevice.bundle
+xnormal
+xx86_64
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.LinkFileList
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.o
+d/Applications/Autodesk/maya2014/Maya.app/Contents/MacOS/libOpenMaya.dylib
+d/Applications/Autodesk/maya2014/Maya.app/Contents/MacOS/libOpenMayaAnim.dylib
+d/Applications/Autodesk/maya2014/Maya.app/Contents/MacOS/libOpenMayaUI.dylib
+d/Applications/Autodesk/maya2014/Maya.app/Contents/MacOS/libFoundation.dylib
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/lib/osx_x64/release_dll/libsixense_utils_x64.dylib
+d/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/lib/osx_x64/release_dll/libsixense_x64.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/libstdc++.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/libSystem.dylib
+d/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/5.0/lib/darwin/libclang_rt.osx.a
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libcache.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libcommonCrypto.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libcompiler_rt.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libcopyfile.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libdispatch.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libdnsinfo.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libdyld.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libkeymgr.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/liblaunch.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libmacho.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libquarantine.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libremovefile.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_blocks.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_c.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_dnssd.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_info.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_kernel.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_m.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_network.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_notify.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libsystem_sandbox.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libunc.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libunwind.dylib
+d/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/system/libxpc.dylib
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection105"Link /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug/hydraDevice.bundle47"Ld build/Debug/hydraDevice.bundle normal x86_649356ac19f04cb841^8fe0221af04cb841^---0#0#1#--1657"Ld build/Debug/hydraDevice.bundle normal x86_64    cd /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode    setenv MACOSX_DEPLOYMENT_TARGET 10.8    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++ -arch x86_64 -bundle -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk -L/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug -L/Applications/Autodesk/maya2014/Maya.app/Contents/MacOS -L/Applications/Autodesk/maya2014/Maya.app/Contents/MacOS -L/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode -L/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../../lib/osx_x64/release_dll -F/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug -filelist /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice.LinkFileList -mmacosx-version-min=10.8 -Wl,-executable_path,/Applications/Autodesk/maya2014/Maya.app/Contents/MacOS -Wl,-exported_symbol,__Z16initializePlugin7MObject -Wl,-exported_symbol,__Z18uninitializePlugin7MObject -lOpenMaya -lOpenMayaAnim -lOpenMayaUI -lFoundation -lsixense_utils_x64 -lsixense_x64 -single_module -Xlinker -dependency_info -Xlinker /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/Objects-normal/x86_64/hydraDevice_dependency_info.dat -o /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug/hydraDevice.bundle36"9D6D5252-424D-4B10-B9D4-0A6AAB41F7D3-
+bEE551A24-CDDB-4628-8A5B-15EEE9D90ED4
+
+CProcessPCH++ /Users/pandapanther/Library/Developer/Xcode/DerivedData/hydraDevice_10.8-avjyppfpttbzszezdozpxcjpecch/Index/PrecompiledHeaders/OpenMayaMac-cdijkpspjhbhxwajsozceclcpnvv_ast/OpenMayaMac.h.pch /Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.astbuilder
+r0
+
+CProcessPCH++ /var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.pch /Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s407695382.874791
+e407695384.755600
+r1
+xProcessPCH++
+x/var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.pch
+x/Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+d/Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection76"Precompile /Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h317"ProcessPCH++ /var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.pch /Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler4014e016f04cb841^056ec118f04cb841^---0#0#1#-19%DVTDocumentLocation2@81"file://localhost/Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h0000000000000000^3051"ProcessPCH++ /var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.pch /Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd /Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode    setenv LANG en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++-header -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wno-unused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wno-empty-body -Wno-uninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wno-constant-conversion -Wno-int-conversion -Wno-bool-conversion -Wno-enum-conversion -Wno-shorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DMAC_PLUGIN -D_BOOL -DREQUIRE_IOSTREAM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.8 -g -fvisibility-inlines-hidden -Wno-sign-conversion -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/hydraDevice.hmap -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode../src -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../../include -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/../include -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug/include -I. -I/Applications/Autodesk/maya2014/devkit/include -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/DerivedSources/x86_64 -I/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/hydraDevice_10.8.build/Debug/hydraDevice.build/DerivedSources -F/Users/pandapanther/Documents/dev/VRPrevis/maya/hydraDevice/src/Xcode/build/Debug --serialize-diagnostics /var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.dia -MMD -MT dependencies -MF /var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.d -c /Applications/Autodesk/maya2014/devkit/include/maya/OpenMayaMac.h -o /var/folders/qv/rb48pkrn0vd08s8lykcc4m1m0000gn/C/com.apple.DeveloperTools/5.0.2-5A3005/Xcode/SharedPrecompiledHeaders/OpenMayaMac-fsmvymaxvkydflarbhjahsblstap/OpenMayaMac.h.pch36"75269074-53F7-4E56-91B7-1B4366678D32-
+bEE551A24-CDDB-4628-8A5B-15EEE9D90ED4
+
