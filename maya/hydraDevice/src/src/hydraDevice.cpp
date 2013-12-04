@@ -127,14 +127,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 
 #include <maya/MFnPlugin.h>
 #include <maya/MPxCommand.h>
+#include <maya/MArgList.h>
+#include <maya/MDagPath.h>
 #include <maya/MString.h>
 #include <maya/MTypeId.h>
 #include <maya/MEulerRotation.h>
 #include <maya/MAnimControl.h>
+#include <maya/MFnAnimCurve.h>
+#include <maya/MFnDagNode.h>
+#include <maya/MFnCamera.h>
+#include <maya/MSelectionList.h>
 
 #include <maya/MQuaternion.h>
 #include <maya/MMatrix.h>
@@ -169,26 +176,11 @@
 #include <sixense_utils/controller_manager/controller_manager.hpp>
 
 // ==========================================================================
- 
-// flags that the controller manager system can set to tell the graphics system to draw the instructions
-// for the player
-//static bool controller_manager_screen_visible = true;
-//std::string controller_manager_text_string;
 
-
-// Callback function for messages
-//
-//static void eventCB(void * data);
-static void hydraPreRollCB(float elapsedTime, float lastTime, void * data);
-
-// Array of callback ids.
-//
-//typedef MCallbackId* MCallbackIdPtr;
-//static MCallbackIdPtr callbackId = NULL;
-
+// hydraRecord Callback ID data store
 MCallbackIdArray callbackIds;
 int callbackCounter;
-
+double gStartClock;
 
 class hydraDeviceNode : public MPxThreadedDeviceNode
 {
@@ -441,6 +433,7 @@ void hydraDeviceNode::threadHandler()
 		endThreadLoop();
 	}
 	setDone( true );
+    fclose(log_file);
 }
 
 MStatus togglePlayback()
@@ -574,24 +567,16 @@ MStatus hydraDeviceNode::initialize()
 	return MS::kSuccess;
 }
 
-MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
-{
+MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
 	MStatus status;
 	if( plug == output || plug == outputTranslate || plug == outputTranslateX ||
        plug == outputTranslateY || plug == outputTranslateZ ||
        plug == outputRotate || plug == outputRotateX ||
        plug == outputRotateY || plug == outputRotateZ)
-	{
+    {
 		MCharBuffer buffer;
-        //long i;
-        //long poolCount = threadDataCount();
-        //if (poolCount > 1){
-        //    for (i=0;i<poolCount-1;i++){
-        //        popThreadData(buffer);
-        //    }
-        //}
-		if ( popThreadData(buffer) )
-		{
+
+		if ( popThreadData(buffer) ) {
 			double* doubleData = reinterpret_cast<double*>(buffer.ptr());
             
 
@@ -692,12 +677,10 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
                 printf ("%s \n", "Button Joystick Press Detected.");
 
             }
-            
-            
+  
 			return ( MS::kSuccess );
 		}
-		else
-		{
+		else {
 			return MS::kFailure;
 		}
 	}
@@ -727,9 +710,16 @@ static void hydraPreRollCB(float elapsedTime, float lastTime, void * data){
     if (callbackCounter == 0){
         MString melCmd = "inViewMessage -smg (\"GO\") -fst 1 -fot 1 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
         MGlobal::executeCommand( melCmd );
-        melCmd = "play -rec";
-        MGlobal::executeCommand( melCmd );
-        //anim.playForward();
+        
+        
+        melCmd = "hydraCamFromLog hydraCamFromLog -l \"sixense_data.txt\" -sc ";
+        gStartClock = clock();
+        melCmd += gStartClock;
+        //melCmd = "play -rec";
+        //MGlobal::executeCommand( melCmd );
+        
+        anim.playForward();
+        printf("CLOCK START TICK: %f",gStartClock);
     }
     else if (callbackCounter > 0){
         MString melCmd = "inViewMessage -smg (\"Ready ";
@@ -741,21 +731,38 @@ static void hydraPreRollCB(float elapsedTime, float lastTime, void * data){
 
 // called when playback has stopped after doing a record play
 static void hydraPostRecordCallback(bool state, void * data){
-    printf ("%s \n", "playback finshed callback executed");
+    printf ("%s \n", "playbackCB callback called");
     MAnimControl anim;
+    MString melCmd;
     if (state == false){
-        printf ("%s \n", "timer callback added");
-        MString melCmd = "inViewMessage -smg (\"Finish\") -fst 100 -fot 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        printf ("%s \n", "Playback State False");
+        melCmd = "inViewMessage -smg (\"Finish\") -fst 100 -fot 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
         MGlobal::executeCommand( melCmd );
         anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
+
+        // read the log file and make a take camera for it
+        melCmd = "hydraCamFromLog hydraCamFromLog -l \"sixense_data.txt\" -sc ";
+        melCmd += gStartClock;
+        MGlobal::executeCommand( melCmd );
+        // remove all callbacks
+        for (unsigned int i=0; i < callbackIds.length(); i++ ) {
+            MMessage::removeCallback( (MCallbackId)callbackIds[i] );
+        }
     }
-    // remove all callbacks
-    for (unsigned int i=0; i < callbackIds.length(); i++ ) {
-        MMessage::removeCallback( (MCallbackId)callbackIds[i] );
+    else{
+        printf ("%s \n", "Playback State True");
     }
+
+
 }
 
 
+
+
+
+/////////////////////////////////////////
+// RUNS A RECORD METHOD WITH A PREROLL //
+/////////////////////////////////////////
 
 class hydraRecord : public MPxCommand
 {
@@ -828,7 +835,245 @@ void* hydraRecord::creator() {
 
 
 
-// PLUGIN REGISTRATION
+
+
+///////////////////////////////////////////////////////////////////////
+// CREATES A MAYA CAMERA WITH ANIMATION CURVES FROM A HYDRA LOG FILE //
+///////////////////////////////////////////////////////////////////////
+
+class hydraCamFromLog : public MPxCommand
+{
+public:
+    MStatus doIt( const MArgList& args );
+    MStatus redoIt();
+    MStatus undoIt();
+    bool isUndoable() const;
+    static void* creator();
+private:
+    MDagPath fDagPath;
+    MString logPath;
+    MTime startFrame;
+    MTime endFrame;
+    double durationFrames;
+    double startClock;
+    double endClock;
+    MStringArray logData;
+};
+
+MStatus hydraCamFromLog::doIt( const MArgList& args ) {
+    MStatus status;
+    for ( int i = 0; i < args.length(); i++ ){
+        if ( MString( "-l" ) == args.asString( i, &status ) && MS::kSuccess == status ){
+            MString tmp = args.asString( ++i, &status );
+            if ( MS::kSuccess == status )
+                logPath = tmp;
+        }
+        else if ( MString( "-sc" ) == args.asString( i, &status ) && MS::kSuccess == status ){
+            double tmp = args.asDouble( ++i, &status );
+            if ( MS::kSuccess == status )
+                startClock = tmp;
+        }
+        else if ( MString( "-ec" ) == args.asString( i, &status ) && MS::kSuccess == status ){
+            double tmp = args.asDouble( ++i, &status );
+            if ( MS::kSuccess == status )
+                endClock = tmp;
+        }
+        else{
+            MString msg = "Invalid flag: ";
+            msg += args.asString( i );
+            displayError( msg );
+            return MS::kFailure;
+        }
+    }
+    
+    
+    // load the log file into a string array (limit this to 10,000 entries)
+    // need to have error handling here
+    printf ("%s \n", "Reading Log File");
+    char buffer [200];
+    static FILE *log_file = 0;
+    log_file = fopen( "sixense_log.txt", "r" );
+    printf ("%s \n", "Log File Opened");
+    if( log_file ) {
+        while(!feof(log_file)) {
+        // read the file into memory
+        fgets (buffer,200,log_file);
+        logData.append(buffer);
+        //fscanf( log_file, "%d %f %f %f %f %f %f %f %f %f %f\n", (double)clock(),doubleData[0],doubleData[1],doubleData[2],doubleData[3],doubleData[4],doubleData[5],doubleData[6],doubleData[7],doubleData[8],doubleData[9]);
+        }
+        fclose(log_file);
+    }
+    printf ("%s \n", "FINISHED Reading Log File");
+    
+    
+    // store the start and end frames to generate keys for
+    MAnimControl anim;
+    startFrame = anim.minTime();
+    endFrame = anim.maxTime();
+    durationFrames = endFrame.value() - startFrame.value();
+    
+    // if no endClock argument is specified then assume its the duration of the playback range
+    if (endClock == 0){
+        endClock = startClock + ((durationFrames / 24)*CLOCKS_PER_SEC);
+    }
+    printf ("%s \n", "Calling redoIt()");
+    redoIt();
+    
+    return MS::kSuccess;
+}
+
+MStatus hydraCamFromLog::redoIt() {
+    
+    MStatus status;
+    
+    // process the log data and input values and generate a maya camera with animation curves
+
+    
+    // create the camera
+    //MDagPath mObject;
+    //MFnDagNode fnSet( mObject, &status );
+    
+    MObject mGroup;
+    const MString groupName = "hydraGroup";
+    MSelectionList tempList;
+    tempList.add(groupName);
+    tempList.getDependNode(0, mGroup);
+
+    // Create Camera parented under hydraGroup
+    MString camName = "hydraCam_Take";
+    MFnCamera hydCamFn;
+    const MObject newCam = hydCamFn.create(mGroup);
+    MDagPath mObject;
+    MDagPath::getAPathTo(newCam,mObject);
+    //mObject.getAPathTo(newCam);
+    MFnDagNode fnSet( mObject, &status );
+    fnSet.setName(camName);
+    
+    
+    if ( MS::kSuccess != status ) {
+        cerr << "Failure to create function set\n";
+    }
+    
+    
+    // create the translate anim curves from the data
+    MString attrName( "translateX" );
+    const MObject attrX = fnSet.attribute( attrName, &status );
+    MFnAnimCurve acFnSetX;
+    acFnSetX.create( mObject.transform(), attrX, NULL, &status );
+    if ( MS::kSuccess != status ) {
+        cerr << "Failure creating MFnAnimCurve function set (translateX)\n";
+    }
+    attrName = "translateY";
+    const MObject attrY = fnSet.attribute( attrName, &status );
+    MFnAnimCurve acFnSetY;
+    acFnSetY.create( mObject.transform(), attrY, NULL, &status );
+    if ( MS::kSuccess != status ) {
+        cerr << "Failure creating MFnAnimCurve function set (translateY)\n";
+    }
+    attrName = "translateZ";
+    const MObject attrZ = fnSet.attribute( attrName, &status );
+    MFnAnimCurve acFnSetZ;
+    acFnSetZ.create( mObject.transform(), attrZ, NULL, &status );
+    if ( MS::kSuccess != status ) {
+        cerr << "Failure creating MFnAnimCurve function set (translateZ)\n";
+    }
+    
+    // create the rotation anim curves from the data
+    attrName = "rotateX";
+    const MObject attrRX = fnSet.attribute( attrName, &status );
+    MFnAnimCurve acFnSetRX;
+    acFnSetRX.create( mObject.transform(), attrRX, NULL, &status );
+    if ( MS::kSuccess != status ) {
+        cerr << "Failure creating MFnAnimCurve function set (rotateX)\n";
+    }
+    attrName = "rotateY";
+    const MObject attrRY = fnSet.attribute( attrName, &status );
+    MFnAnimCurve acFnSetRY;
+    acFnSetRY.create( mObject.transform(), attrRY, NULL, &status );
+    if ( MS::kSuccess != status ) {
+        cerr << "Failure creating MFnAnimCurve function set (rotateY)\n";
+    }
+    attrName = "rotateZ";
+    const MObject attrRZ = fnSet.attribute( attrName, &status );
+    MFnAnimCurve acFnSetRZ;
+    acFnSetRZ.create( mObject.transform(), attrRZ, NULL, &status );
+    if ( MS::kSuccess != status ) {
+        cerr << "Failure creating MFnAnimCurve function set (rotateZ)\n";
+    }
+    
+    // Build the keyframes
+
+    
+    //const unsigned int maxIterations = 1000;
+
+    // seek start clock time in the buffer
+    unsigned int logLineCount = logData.length();
+    
+    // for each line in the log buffer
+    printf ("%s length=%d\n", "Starting loop of log buffer",logLineCount);
+    for( int i = 0; i <= logLineCount; i++ ) {
+        MStringArray strVals;
+        logData[i].split(' ', strVals);
+        //printf ("%f, ",strVals[0].asDouble());
+        
+        if (strVals[0].asDouble()>startClock){
+            printf ("Found clock=%f startClock=%f\n", strVals[0].asDouble(),startClock);
+            printf("tx:%f ty:%f tz:%f rx:%f ry:%f rz:%f",strVals[1].asDouble(),strVals[2].asDouble(),strVals[3].asDouble(),strVals[4].asDouble(),strVals[5].asDouble(),strVals[6].asDouble());
+
+            // map clock tick to maya timeline
+            double clockDiff = difftime(strVals[0].asDouble(),startClock);
+            double frame = startFrame.value()+((clockDiff/CLOCKS_PER_SEC)*24); // need to get frame rate from sys
+
+            // make this process the log data
+            double tx = strVals[1].asDouble();
+            double ty = strVals[2].asDouble();
+            double tz = strVals[3].asDouble();
+            MAngle rx,ry,rz;
+            rx.setUnit(MAngle::kDegrees);
+            ry.setUnit(MAngle::kDegrees);
+            rz.setUnit(MAngle::kDegrees);
+            rx.setValue(strVals[4].asDouble());
+            ry.setValue(strVals[5].asDouble());
+            rz.setValue(strVals[6].asDouble());
+        
+        
+            MTime tm(frame, MTime::kFilm );
+            if ( ( MS::kSuccess != acFnSetX.addKeyframe( tm, tx ) ) ||
+                ( MS::kSuccess != acFnSetY.addKeyframe( tm, ty ) ) ||
+                ( MS::kSuccess != acFnSetZ.addKeyframe( tm, tz ) ) ||
+                ( MS::kSuccess != acFnSetRX.addKeyframe( tm, rx.asRadians() ) ) ||
+                ( MS::kSuccess != acFnSetRY.addKeyframe( tm, ry.asRadians() ) ) ||
+                ( MS::kSuccess != acFnSetRZ.addKeyframe( tm, rz.asRadians() ) ) ) {
+                cerr << "Error setting the keyframe\n";
+            }
+        }
+        else if (strVals[0].asDouble() > endClock){
+            break;
+        }
+    }
+    
+    
+    return MS::kSuccess;
+}
+
+MStatus hydraCamFromLog::undoIt() {
+    
+    return MS::kSuccess;
+}
+
+bool hydraCamFromLog::isUndoable() const {
+    return true;
+}
+
+void* hydraCamFromLog::creator() {
+    return new hydraCamFromLog;
+}
+
+
+
+/////////////////////////
+// PLUGIN REGISTRATION //
+/////////////////////////
 
 MStatus initializePlugin( MObject obj )
 {
@@ -845,6 +1090,7 @@ MStatus initializePlugin( MObject obj )
 	}
     
     plugin.registerCommand( "hydraRecord", hydraRecord::creator );
+    plugin.registerCommand( "hydraCamFromLog", hydraCamFromLog::creator );
 
 	return status;
 }
@@ -861,6 +1107,8 @@ MStatus uninitializePlugin( MObject obj )
     }
 
 	status = plugin.deregisterNode( hydraDeviceNode::id );
+    status = plugin.deregisterCommand("hydraRecord");
+    status = plugin.deregisterCommand("hydraCamFromLog");
 	if( !status ) {
 		status.perror("failed to deregisterNode hydraDeviceNode");
 	}
