@@ -25,7 +25,7 @@
  // ADD VECTOR DATA
  string $loc[] = `spaceLocator -p 0 0 0`;
  
-
+/Users/adam/Documents/maya/projects/default/scenes/hydraTest2_recorded.ma
 
 	setAttr ( $node + ".live" ) 1;
  
@@ -125,6 +125,9 @@
 */
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
 
 #include <maya/MFnPlugin.h>
 #include <maya/MPxCommand.h>
@@ -139,6 +142,7 @@
 #include <maya/MTransformationMatrix.h>
 
 #include "api_macros.h"
+
 #include <maya/MIOStream.h>
 
 #include <maya/MPlug.h>
@@ -298,20 +302,6 @@ void hydraDeviceNode::postConstructor()
     //createMemoryPools (12, 3, sizeof(Ptr)) ;
 }
 
-static double getRandomX()
-{
-	// rand() is not thread safe for getting
-	// the same results in different threads.
-	// But this does not matter for this simple
-	// example.
-    
-    
-	const double kScale = 10.0;
-	double i = (double) rand();
-	return ( i / RAND_MAX ) * kScale;
-}
-
-
 void hydraDeviceNode::threadHandler()
 {
 	MStatus status;
@@ -329,6 +319,8 @@ void hydraDeviceNode::threadHandler()
 
     //sixenseSetFilterEnabled(1);
     //sixenseSetFilterParams(.2, 0, 1, .1);
+    static FILE *log_file = 0;
+    log_file = fopen( "sixense_log.txt", "w" );
     
     
 	while ( ! isDone() )
@@ -345,6 +337,7 @@ void hydraDeviceNode::threadHandler()
 
 		beginThreadLoop();
 		{
+            clock();
             
             const double pi = 3.14159265358979323846; // CHANGE THIS TO LIBRARY CONST
             const double world_scale = 0.02;
@@ -422,7 +415,7 @@ void hydraDeviceNode::threadHandler()
             double* doubleData = reinterpret_cast<double*>(buffer.ptr());
             
 			doubleData[0] = (double)p_vec.x * world_scale; 
-			doubleData[1] = (double)p_vec.y * world_scale; //*2; // for some reason y is squished? 
+			doubleData[1] = (double)p_vec.y * world_scale;
 			doubleData[2] = (double)p_vec.z * world_scale;
              
             doubleData[3] = (double)er_vec.x * (180/pi); 
@@ -434,6 +427,13 @@ void hydraDeviceNode::threadHandler()
             doubleData[7] = buttonData;
             doubleData[8] = (double)acd.controllers[0].joystick_x;
             doubleData[9] = (double)acd.controllers[0].joystick_y;
+            
+            // log the data to a temp file
+            if( log_file ) {
+                //fprintf( log_file, "base: %d controller: %d ", 0, 0 );
+                
+                fprintf( log_file, "%f %f %f %f %f %f %f %f %f %f %f\n", (double)clock(),doubleData[0],doubleData[1],doubleData[2],doubleData[3],doubleData[4],doubleData[5],doubleData[6],doubleData[7],doubleData[8],doubleData[9]);
+            }
             
             
 			pushThreadData( buffer );
@@ -455,10 +455,6 @@ MStatus togglePlayback()
         }
     return status;
 }
-
-
-
-
 
 
 void hydraDeviceNode::threadShutdownHandler()
