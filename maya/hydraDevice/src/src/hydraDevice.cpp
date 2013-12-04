@@ -59,8 +59,14 @@
  // do rehersal pass (no recording)
  if ($btnVal == 0.01){
  currentTime -e `playbackOptions -q -min`;
- if (`play -q -st` == true) play -st false;
- else play -st true;
+ if (`play -q -st` == true){
+ play -st false;
+ }
+ else {
+ playbackOptions -loop "once";
+ play -st true;
+ playbackOptions -loop "continuous";
+ }
  }
  // do recording pass
  else if ($btnVal == 0.1){
@@ -68,7 +74,17 @@
  // duplicate anim curve and transform
  // rename duplicates
  // connect them together
+ 
  currentTime -e `playbackOptions -q -min`;
+ 
+ // set update to single instead of all
+ $pauseLength = 3;
+ for ($i=0;$i<$pauseLength;$i++){
+ pause -sec 1;
+ inViewMessage -smg ("Ready"+$i) -pos midCenter -fontSize 28 -bkc 0x00000000 -fade;
+ }
+ 
+ 
  play -rec;
  }
  print ($btnVal+" button value!\n");
@@ -76,16 +92,7 @@
  
  }// end proc
  scriptJob -runOnce false  -killWithScene -attributeChange hydraDevice1.outputButtons hydraButtonWatch;
- scriptJob -runOnce false -killWithScene true -ev playingBack sixensePlayIntterupt;
  
- // used to detect button presses while playing back
- global proc sixensePlayIntterupt(){
- float $btnVal = `getAttr hydraDevice1.outputButtons`;
- if ($btnVal == 0.01){
- play -st false;
- }
- 
- }
  
  // creates a copy of the hydraAnimData null along with animation curves
  global proc sixenseDuplicateTakeRecNode (){
@@ -99,7 +106,7 @@
  global proc sixenseChangeTake (string $takeRecNode){
  // connects the active takeRecNode attrs to the specified takeRecNode.
  // check to see if it has valid attribute & if they are animated
- // 
+ //
  
  }
  
@@ -120,6 +127,8 @@
 #include <stdlib.h>
 
 #include <maya/MFnPlugin.h>
+#include <maya/MPxCommand.h>
+#include <maya/MString.h>
 #include <maya/MTypeId.h>
 #include <maya/MEulerRotation.h>
 #include <maya/MAnimControl.h>
@@ -137,6 +146,10 @@
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MPxThreadedDeviceNode.h>
 
+#include <maya/MTimerMessage.h>
+#include <maya/MConditionMessage.h>
+#include <maya/MCallbackIdArray.h>
+#include <maya/MGlobal.h>
 
 
 // ==========================================================================
@@ -157,6 +170,20 @@
 // for the player
 //static bool controller_manager_screen_visible = true;
 //std::string controller_manager_text_string;
+
+
+// Callback function for messages
+//
+//static void eventCB(void * data);
+static void hydraPreRollCB(float elapsedTime, float lastTime, void * data);
+
+// Array of callback ids.
+//
+//typedef MCallbackId* MCallbackIdPtr;
+//static MCallbackIdPtr callbackId = NULL;
+
+MCallbackIdArray callbackIds;
+int callbackCounter;
 
 
 class hydraDeviceNode : public MPxThreadedDeviceNode
@@ -416,11 +443,11 @@ void hydraDeviceNode::threadHandler()
 	setDone( true );
 }
 
-MStatus hydraDeviceNode::togglePlayback()
+MStatus togglePlayback()
 {
     MStatus status;
         MAnimControl anim;
-        if (anim.isPlaying){
+        if (anim.isPlaying()){
             status = anim.stop();
         }
         else{
@@ -428,6 +455,11 @@ MStatus hydraDeviceNode::togglePlayback()
         }
     return status;
 }
+
+
+
+
+
 
 void hydraDeviceNode::threadShutdownHandler()
 {
@@ -621,10 +653,51 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
 			block.setClean( plug );
             
 			releaseDataStorage(buffer);
-            
+
+            // BUTTON PRESS HANDLING (THIS IS SHITTY WAY TO DO THIS, BUT WORKS)
             if (outputButtons == 0.001){
-                togglePlayback();
+                printf ("%s \n", "Button 1 Press Detected.");
+                MStatus status;
+                MAnimControl anim;
+                const MTime minTime = anim.minTime();
+                if (anim.isPlaying()){
+                    status = anim.stop();
+                }
+                else{
+                    anim.setCurrentTime(minTime);
+                    status = anim.playForward();
+                }
             }
+            else if (outputButtons == 0.01){
+                printf ("%s \n", "Button 2 Press Detected.");
+                MStatus status;
+                MAnimControl anim;
+                status = anim.stop();
+                
+            }
+            else if (outputButtons == 0.1){
+                printf ("%s \n", "Button 3 Press Detected.");
+                MString melCmd = "hydraRecord";
+                MGlobal::executeCommand( melCmd );
+            }
+            else if (outputButtons == 1){
+                printf ("%s \n", "Button 4 Press Detected.");
+                
+            }
+            else if (outputButtons == 10){
+                printf ("%s \n", "Button Start Press Detected.");
+                
+            }
+            else if (outputButtons == 100){
+                printf ("%s \n", "Button Bumper Press Detected.");
+                
+            }
+            else if (outputButtons == 1000){
+                printf ("%s \n", "Button Joystick Press Detected.");
+
+            }
+            
+            
 			return ( MS::kSuccess );
 		}
 		else
@@ -635,6 +708,131 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block )
     
 	return ( MS::kUnknownParameter );
 }
+
+// PLUGIN CUSTOM COMMANDS START HERE
+
+
+static void hydraPreRollCB(float elapsedTime, float lastTime, void * data){
+    
+    printf ("%s \n", "hydraPreRollCB Called");
+    //int i = (int)(size_t)data;
+    int count = (int)(size_t)data;
+    MAnimControl anim;
+    
+    count =  count - 1;
+    callbackCounter--;
+    double asStr = (double)callbackCounter;
+    data = (void *)(size_t)count;
+
+
+    
+    // show a view message stating the time left until record
+    printf ("elaps:%f, last:%f, count:%d\n", elapsedTime,lastTime,callbackCounter);
+    if (callbackCounter == 0){
+        MString melCmd = "inViewMessage -smg (\"GO\") -fst 1 -fot 1 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        MGlobal::executeCommand( melCmd );
+        melCmd = "play -rec";
+        MGlobal::executeCommand( melCmd );
+        //anim.playForward();
+    }
+    else if (callbackCounter > 0){
+        MString melCmd = "inViewMessage -smg (\"Ready ";
+        melCmd += asStr;
+        melCmd +="\") -fst 100 -fot 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        MGlobal::executeCommand( melCmd );
+    }
+}
+
+// called when playback has stopped after doing a record play
+static void hydraPostRecordCallback(bool state, void * data){
+    printf ("%s \n", "playback finshed callback executed");
+    MAnimControl anim;
+    if (state == false){
+        printf ("%s \n", "timer callback added");
+        MString melCmd = "inViewMessage -smg (\"Finish\") -fst 100 -fot 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        MGlobal::executeCommand( melCmd );
+        anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
+    }
+    // remove all callbacks
+    for (unsigned int i=0; i < callbackIds.length(); i++ ) {
+        MMessage::removeCallback( (MCallbackId)callbackIds[i] );
+    }
+}
+
+
+
+class hydraRecord : public MPxCommand
+{
+public:
+    MTimerMessage prerolltimer;
+    MConditionMessage recordFinished;
+    MStatus doIt( const MArgList& args );
+    bool isUndoable() const;
+    static void* creator();
+};
+
+MStatus hydraRecord::doIt( const MArgList& args ) {
+    
+    MCallbackId id;
+    
+    //cout << "Hello " << args.asString( 0 ).asChar() << endl;
+    printf ("%s \n", "hydraRecord::doIt() called");
+    //MGlobal::executeCommand
+    //MTimerMessage prerolltimer;
+    MStatus status;
+    const MString condition = "playingBack";
+    
+    // set the playback head to the playback start time
+    MAnimControl anim;
+    anim.setPlaybackMode(MAnimControl::kPlaybackOnce);
+    const MTime minTime = anim.minTime();
+    anim.setCurrentTime(minTime);
+    int c = 3;
+    
+    // do 3 second preroll;
+    //double count = 3;
+    //data = &count;
+    // register a timer callback to call itself 3 times (may not be accurate)
+    
+    callbackCounter = 3;
+    
+    id = prerolltimer.addTimerCallback(1, hydraPreRollCB, (void *)(size_t)c, &status);
+    
+    if (status) {
+        callbackIds.append( id );
+        printf ("%s \n", "timer callback added");
+        MString melCmd = "inViewMessage -smg (\"Ready 3\") -fst 100 -fot 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        MGlobal::executeCommand( melCmd );
+    }
+    else {
+        printf ("%s \n", "timer callback FAILED");
+    }
+
+    // create a new playbackFinished callback
+    id = recordFinished.addConditionCallback(condition, hydraPostRecordCallback,&status);
+    if (status) {
+        callbackIds.append( id );
+        printf ("%s \n", "record callback added");
+    }
+    else {
+        printf ("%s \n", "record callback FAILED");
+    }
+    
+    printf ("%s \n", "hydraRecord::doIt() finished");
+    return MS::kSuccess;
+}
+
+bool hydraRecord::isUndoable() const {
+    return false;
+}
+
+void* hydraRecord::creator() {
+    return new hydraRecord;
+}
+
+
+
+// PLUGIN REGISTRATION
 
 MStatus initializePlugin( MObject obj )
 {
@@ -649,6 +847,8 @@ MStatus initializePlugin( MObject obj )
 	if( !status ) {
 		status.perror("failed to registerNode hydraDeviceNode");
 	}
+    
+    plugin.registerCommand( "hydraRecord", hydraRecord::creator );
 
 	return status;
 }
@@ -657,11 +857,20 @@ MStatus uninitializePlugin( MObject obj )
 {
 	MStatus status;
 	MFnPlugin plugin(obj);
+    
+    // Remove all callbacks
+    //
+    for (unsigned int i=0; i < callbackIds.length(); i++ ) {
+        MMessage::removeCallback( (MCallbackId)callbackIds[i] );
+    }
 
 	status = plugin.deregisterNode( hydraDeviceNode::id );
 	if( !status ) {
 		status.perror("failed to deregisterNode hydraDeviceNode");
 	}
+    
+    plugin.deregisterCommand( "hydraRecord" );
+
 
 	return status;
 }
