@@ -712,14 +712,15 @@ static void hydraPreRollCB(float elapsedTime, float lastTime, void * data){
         MGlobal::executeCommand( melCmd );
         
         
-        melCmd = "hydraCamFromLog hydraCamFromLog -l \"sixense_data.txt\" -sc ";
-        gStartClock = clock();
-        melCmd += gStartClock;
-        //melCmd = "play -rec";
-        //MGlobal::executeCommand( melCmd );
+        //melCmd = "hydraCamFromLog hydraCamFromLog -l \"sixense_data.txt\" -sc ";
         
-        anim.playForward();
-        printf("CLOCK START TICK: %f",gStartClock);
+        //melCmd += gStartClock;
+        
+        melCmd = "play -rec";
+        MGlobal::executeCommand( melCmd );
+        
+        //anim.playForward();
+
     }
     else if (callbackCounter > 0){
         MString melCmd = "inViewMessage -smg (\"Ready ";
@@ -736,20 +737,27 @@ static void hydraPostRecordCallback(bool state, void * data){
     MString melCmd;
     if (state == false){
         printf ("%s \n", "Playback State False");
-        melCmd = "inViewMessage -smg (\"Finish\") -fst 100 -fot 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
-        MGlobal::executeCommand( melCmd );
-        anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
-
+        //melCmd = "inViewMessage -smg (\"Finish\") -fst 100 -fot 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        //MGlobal::executeCommand( melCmd );
+    
         // read the log file and make a take camera for it
-        melCmd = "hydraCamFromLog hydraCamFromLog -l \"sixense_data.txt\" -sc ";
+        melCmd = "hydraCamFromLog -l \"sixense_data.txt\" -sc ";
         melCmd += gStartClock;
+        melCmd += " -ec ";
+        double endClock = clock();
+        printf("END CLOCK TICK: %f",endClock);
+        melCmd += endClock;
         MGlobal::executeCommand( melCmd );
+        
         // remove all callbacks
         for (unsigned int i=0; i < callbackIds.length(); i++ ) {
             MMessage::removeCallback( (MCallbackId)callbackIds[i] );
         }
+        anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
     }
     else{
+        gStartClock = clock();
+        printf("START CLOCK: %f\n",gStartClock);
         printf ("%s \n", "Playback State True");
     }
 
@@ -862,6 +870,10 @@ private:
 
 MStatus hydraCamFromLog::doIt( const MArgList& args ) {
     MStatus status;
+    startClock = 0;
+    endClock = 0;
+    durationFrames = 0;
+    
     for ( int i = 0; i < args.length(); i++ ){
         if ( MString( "-l" ) == args.asString( i, &status ) && MS::kSuccess == status ){
             MString tmp = args.asString( ++i, &status );
@@ -914,7 +926,7 @@ MStatus hydraCamFromLog::doIt( const MArgList& args ) {
     
     // if no endClock argument is specified then assume its the duration of the playback range
     if (endClock == 0){
-        endClock = startClock + ((durationFrames / 24)*CLOCKS_PER_SEC);
+        endClock = startClock + ((durationFrames / 24.0)*CLOCKS_PER_SEC);
     }
     printf ("%s \n", "Calling redoIt()");
     redoIt();
@@ -1009,6 +1021,7 @@ MStatus hydraCamFromLog::redoIt() {
     // seek start clock time in the buffer
     unsigned int logLineCount = logData.length();
     
+    
     // for each line in the log buffer
     printf ("%s length=%d\n", "Starting loop of log buffer",logLineCount);
     for( int i = 0; i <= logLineCount; i++ ) {
@@ -1016,13 +1029,14 @@ MStatus hydraCamFromLog::redoIt() {
         logData[i].split(' ', strVals);
         //printf ("%f, ",strVals[0].asDouble());
         
-        if (strVals[0].asDouble()>startClock){
+        if (strVals[0].asDouble()>=startClock){
             printf ("Found clock=%f startClock=%f\n", strVals[0].asDouble(),startClock);
             printf("tx:%f ty:%f tz:%f rx:%f ry:%f rz:%f",strVals[1].asDouble(),strVals[2].asDouble(),strVals[3].asDouble(),strVals[4].asDouble(),strVals[5].asDouble(),strVals[6].asDouble());
 
             // map clock tick to maya timeline
-            double clockDiff = difftime(strVals[0].asDouble(),startClock);
-            double frame = startFrame.value()+((clockDiff/CLOCKS_PER_SEC)*24); // need to get frame rate from sys
+            double clockDiff = strVals[0].asDouble() - startClock;
+            double seconds = startFrame.as(MTime::kSeconds) + (clockDiff/CLOCKS_PER_SEC);
+            double frame = startFrame.value()+((clockDiff/CLOCKS_PER_SEC)*24);
 
             // make this process the log data
             double tx = strVals[1].asDouble();
@@ -1036,8 +1050,7 @@ MStatus hydraCamFromLog::redoIt() {
             ry.setValue(strVals[5].asDouble());
             rz.setValue(strVals[6].asDouble());
         
-        
-            MTime tm(frame, MTime::kFilm );
+            MTime tm(seconds, MTime::kSeconds );
             if ( ( MS::kSuccess != acFnSetX.addKeyframe( tm, tx ) ) ||
                 ( MS::kSuccess != acFnSetY.addKeyframe( tm, ty ) ) ||
                 ( MS::kSuccess != acFnSetZ.addKeyframe( tm, tz ) ) ||
@@ -1047,7 +1060,7 @@ MStatus hydraCamFromLog::redoIt() {
                 cerr << "Error setting the keyframe\n";
             }
         }
-        else if (strVals[0].asDouble() > endClock){
+        if (strVals[0].asDouble() > endClock){
             break;
         }
     }
