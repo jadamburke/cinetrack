@@ -1,0 +1,188 @@
+
+global proc hydraUI () {
+	global int $hideProjMan;
+	if ($hideProjMan != 1){
+		if (!`window -exists hydraUIWindow`){
+			window  -title "Hydra UI" -width 240 -height 600 -menuBar true hydraUIWindow;
+			string $ppResources = `getenv PP_RESOURCE`;
+			string $ppTools = `getenv MAYA_PPTOOLS`;
+
+
+			//menu -label "Create";
+			//	menuItem -label "New Job" ;
+			//	menuItem -label "New Maya Project";
+
+			formLayout hydraUIWindowMainForm;
+			columnLayout hydraUIDetailsCol;
+				
+			setParent ..;
+
+			button -l "Do Nothing" -c "" -al "center" -h 26 hydraUIBtnRefresh ;
+			button -l "Close" -c "window -e -vis 0 hydraUIWindow" -al "center" -h 26 hydraUIBtnClose ;
+
+			
+			paneLayout -configuration "horizontal2" hydraUIMainPane;
+			formLayout hydraUILibForm;
+			
+			formLayout -p hydraUIMainPane hydraUIDetailsForm;
+
+
+				//frameLayout -cll 1 -bs "etchedIn" -l "Maya Projects (database):" hydraUIListFrmeLyt;
+				//	string $camLister = `treeView -numberOfButtons 0 -abr true -enk true -idc "hydraUITreeSetProject" -sc "hydraUISetActiveProject " -cmc "" hydraUIProjectList`;
+
+				//setParent ..;
+			columnLayout -cat "both" 0 -rs 2 -adj 1 hydraUIDtlColLyt;
+				button -l "Setup HydraCam" -al "center" -h 26 -c "";
+				button -l "Remove HydraCam" -al "center" -h 26 -c "";
+				button -l "Playblast All" -al "center" -h 26 -c "";
+				separator -style "none" -h 10;
+				frameLayout -cll 1 -bs "etchedIn" -l "Cam Details" -bgc .2 .2 .2 hydraUIDefaultsLyt;
+
+					columnLayout -cat "both" 3 -rs 2 -adj true -bgc .4 .4 .4;
+
+						separator -style "none" -h 5;
+						
+						floatFieldGrp -en1 1 -en2 1 -cw 1 90 -cw 2 60 -cw 3 60 -nf 2 -pre 3 -label "Start/End:" -v1 0 -v2 0 hydraUIDtlRange;
+						floatFieldGrp -en1 1 -en2 1 -cw 1 90 -cw 2 60 -cw 3 60 -nf 2 -pre 3 -label "Film Aperture:" -v1 0 -v2 0 hydraUIDtlAperture;
+						textFieldGrp -cw 1 90 -cw 2 122 -adj 2 -label "Lens" -text  "24fps" -editable false hydraUIDtlLens;
+						textFieldGrp -cw 1 90 -cw 2 122 -adj 2 -label "Date Created:" -text  "1.0" -editable false hydraUIDtlAspect;
+						textFieldGrp -cw 1 90 -cw 2 122 -adj 2 -label "User:" -text  "1.0" -editable false hydraUIDtlUsr;
+						textFieldGrp -cw 1 90 -cw 2 122 -adj 2 -label "Sample Rate:" -text  "default" -editable false hydraUIDtlSample;
+
+						separator -style "none" -h 5;
+
+					setParent..;
+				setParent..;
+				separator -style "none" -h 5;
+				frameLayout -cll 1 -bs "etchedIn" -l "Cam Tools" -bgc .2 .2 .2 hydraUIToolsLyt;
+					columnLayout -cat "both" 3 -rs 4 -adj true -bgc .4 .4 .4;
+						separator -style "none" -h 5;
+						rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
+							button -bgc .2 .2 .2 -w 100 -l "View" -al "center" -h 26 -c "";
+							button -bgc .2 .2 .2 -w 100 -l "Playblast" -al "center" -h 26 -c "";
+						setParent ..;
+						rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
+							button -bgc .2 .2 .2 -w 100 -l "Smooth" -al "center" -h 26 -c "";
+							button -bgc .2 .2 .2 -w 100 -l "Rename" -al "center" -h 26 -c "";
+						setParent ..;
+						rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
+							button -bgc .2 .2 .2 -w 100 -l "Delete" -al "center" -h 26 -c "";
+							button -bgc .2 .2 .2 -w 100 -l "Do Over" -al "center" -h 26 -c "";
+						setParent ..;
+						separator -style "none" -h 5;
+			// buttons for adding stuff
+
+			//button -l "New Job" -c "hydraUICreateNewJobUI;" -al "center" -h 26 ;
+
+			setParent hydraUILibForm;
+			frameLayout -cll 0 -bs "etchedIn" -l "Hydra Cameras" hydraUIJobListFrmeLyt;
+
+				//text -label "Jobs:" hydraUITL2;
+
+
+				//string $jobLister = `textScrollList  hydraUIJobList`;
+				string $jobLister = `treeView -numberOfButtons 0 -abr true -enk true -idc "hydraUITreeSetProject" -sc "hydraUISetActiveJob " -cmc "" hydraUIJobList`;
+			setParent ..;
+
+			string $pMenu = `popupMenu -parent $jobLister hydraUIPopupMenu`;		
+
+			//hydraUIBuildMenu  $jobLister;
+
+			//hydraUIPopulateList;
+
+			formLayout -e
+	        		-af hydraUIMainPane top 0
+	        		-af hydraUIMainPane left 0
+	        		-af hydraUIMainPane bottom 35
+	        		-af hydraUIMainPane right 0
+
+		    		-attachForm hydraUIBtnRefresh "left" 5 
+		    		-attachPosition hydraUIBtnRefresh "right" 3 50
+				-attachNone hydraUIBtnRefresh "top"
+				-attachForm hydraUIBtnRefresh "bottom" 5
+		    
+				-attachPosition hydraUIBtnClose "left" 3 50
+				-attachForm hydraUIBtnClose "right" 5
+				-attachNone hydraUIBtnClose "top"
+				-attachForm hydraUIBtnClose "bottom" 5
+
+
+	        		hydraUIWindowMainForm;
+
+			formLayout -e 
+				-af hydraUIJobListFrmeLyt left 5
+				-af hydraUIJobListFrmeLyt top 0
+				-af hydraUIJobListFrmeLyt right 2
+				-af hydraUIJobListFrmeLyt bottom 5
+				hydraUILibForm;
+
+			//formLayout -e 
+			//	-af hydraUIListFrmeLyt left 2
+			//	-af hydraUIListFrmeLyt top 0
+			//	-af hydraUIListFrmeLyt right 5
+			//	-aof hydraUIListFrmeLyt bottom -150
+			//	-ac hydraUIDtlColLyt top 5 hydraUIListFrmeLyt
+			//	-af hydraUIDtlColLyt left 5
+			//	-af hydraUIDtlColLyt right 5
+			//	hydraUIDetailsForm;
+			
+			paneLayout -e -paneSize 1 50 100 hydraUIMainPane;
+
+			showWindow hydraUIWindow;
+
+			// CB - don't defer this, user is waiting
+			//evalDeferred("hydraUISelectCurrentProject");
+			//eval("hydraUISelectCurrentProject");
+			paneLayout -e -paneSize 2 100 30 hydraUIMainPane;
+		}
+
+
+		else {
+
+			showWindow hydraUIWindow;
+			paneLayout -e -paneSize 2 100 30 hydraUIMainPane;
+			//hydraUISelectCurrentProject;
+		}
+	}
+
+}
+
+global proc int hydraUITreeViewDblClk (string $itemName){
+	return true;
+}
+
+global proc int hydraUITreeSetProject (string $itemName){
+	
+	string $selProj[] = `treeView -q -si hydraUIProjectList`;
+	if (size($selProj) > 0){
+		hydraUISetProjectToSelected;
+		eval("window -e -vis 0 hydraUIWindow;");
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+global proc int hydraUISetActiveJob (string $takeName, int $state) {
+
+
+	if ($state == 1){
+		treeView -e -textColor $takeName .2 .2 .2 hydraUIJobList;
+		//print ("disabled button\n");
+		button -e -en 0 hydraUIBtnRefresh;
+		hydraUIRefreshDetailsUI2 ("");
+		hydraUIRefreshDetailsUI $takeName;
+		//print ("set job to "+$takeName+"\n");
+
+		// refresh the details
+		
+	}
+	else {
+		treeView -e -textColor $takeName .8 .8 .8 hydraUIJobList;
+	}
+	return  1;
+
+}
+global proc hydraUIRefreshDetailsUI2 (string $workspace){
+}

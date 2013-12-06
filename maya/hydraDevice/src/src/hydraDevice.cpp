@@ -127,6 +127,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 #include <math.h>
 
 
@@ -235,6 +236,7 @@ public:
 	static MTypeId		id;
 
 private:
+    MStringArray logBuffer;
 };
 
 MTypeId hydraDeviceNode::id( 0x00081051 );
@@ -262,6 +264,7 @@ MObject hydraDeviceNode::offsetRotateX;
 MObject hydraDeviceNode::offsetRotateY;
 MObject hydraDeviceNode::offsetRotateZ;
 MObject hydraDeviceNode::zoom;
+
 MObject hydraDeviceNode::zoomX;
 MObject hydraDeviceNode::zoomY;
 MObject hydraDeviceNode::zoomZ;
@@ -289,7 +292,7 @@ void hydraDeviceNode::postConstructor()
 	setRefreshOutputAttributes( attrArray );
 
 	// we'll be reading one set of translate x,y, z's at a time
-	createMemoryPools( 2, 10, sizeof(double));
+	createMemoryPools( 3, 10, sizeof(double));
     
     //createMemoryPools (12, 3, sizeof(Ptr)) ;
 }
@@ -302,6 +305,7 @@ void hydraDeviceNode::threadHandler()
 	sixenseInit();
 	int curStep = sixenseUtils::getTheControllerManager()->getCurrentStep();
 	printf ("curStep :: %d \n", curStep);
+    
 	
 	//sixenseUtils::getTheControllerManager()->registerSetupCallback( controller_manager_setup_callback );
 	//sixenseUtils::getTheControllerManager()->setGameType( sixenseUtils::controller_manager::ONE_PLAYER_TWO_CONTROLLER );
@@ -311,6 +315,12 @@ void hydraDeviceNode::threadHandler()
 
     //sixenseSetFilterEnabled(1);
     //sixenseSetFilterParams(.2, 0, 1, .1);
+
+    
+    //MStringArray logBuffer;
+    //MStringArray logDirty;
+    //logDirty.insert("false",0);
+
     static FILE *log_file = 0;
     log_file = fopen( "sixense_log.txt", "w" );
     
@@ -329,8 +339,6 @@ void hydraDeviceNode::threadHandler()
 
 		beginThreadLoop();
 		{
-            clock();
-            
             const double pi = 3.14159265358979323846; // CHANGE THIS TO LIBRARY CONST
             const double world_scale = 0.02;
             
@@ -420,20 +428,42 @@ void hydraDeviceNode::threadHandler()
             doubleData[8] = (double)acd.controllers[0].joystick_x;
             doubleData[9] = (double)acd.controllers[0].joystick_y;
             
+            // was trying to write to memory first, then to disk, but seems like same result
+            /*
+            MString logBuffStr;
+            struct timeval tv;
+            gettimeofday(&tv,NULL);
+            logBuffStr = tv.tv_sec;
+            logBuffStr += ".";
+            logBuffStr += tv.tv_usec;
+            for (int i=0;i<10;i++){
+                logBuffStr += " ";
+                logBuffStr += doubleData[i];
+            }
+            
+            logBuffer.append(logBuffStr);
+             */
+            struct timeval tv;
+            gettimeofday(&tv,NULL);
+            
             // log the data to a temp file
             if( log_file ) {
                 //fprintf( log_file, "base: %d controller: %d ", 0, 0 );
-                
-                fprintf( log_file, "%f %f %f %f %f %f %f %f %f %f %f\n", (double)clock(),doubleData[0],doubleData[1],doubleData[2],doubleData[3],doubleData[4],doubleData[5],doubleData[6],doubleData[7],doubleData[8],doubleData[9]);
+
+                int result;
+                result = fprintf( log_file, "%f %f %f %f %f %f %f %f %f %f %f\n", (double)(tv.tv_sec+(tv.tv_usec*.000001)),doubleData[0],doubleData[1],doubleData[2],doubleData[3],doubleData[4],doubleData[5],doubleData[6],doubleData[7],doubleData[8],doubleData[9]);
+                if (result == -1){
+                    printf("Log Write Fail:%f",((double)(tv.tv_sec+(tv.tv_usec*.000001))));
+                }
             }
             
             
 			pushThreadData( buffer );
+            
 		}
 		endThreadLoop();
 	}
 	setDone( true );
-    fclose(log_file);
 }
 
 MStatus togglePlayback()
@@ -449,11 +479,36 @@ MStatus togglePlayback()
     return status;
 }
 
-
+// this is actually called when only right before starting a new thread.
 void hydraDeviceNode::threadShutdownHandler()
 {
 	// Stops the loop in the thread handler
 	setDone( true );
+    
+    /*
+    
+    //printf ("Thead Dirty? %s \n", logDirty[0].asChar());
+    //if (logDirty[0] == "true"){
+        printf ("%s \n", "Writing Log File");
+        
+        static FILE *log_file = 0;
+        log_file = fopen( "sixense_log.txt", "w" );
+        if( log_file ) {
+            printf ("%s \n", "Writing Log File");
+            for(int i=0;i<logBuffer.length();i++){
+                if (i==0 || i == 10){
+                    printf ("line:%d buffLen: %d str:%s\n", i, logBuffer.length(), logBuffer[i].asChar());
+                }
+                fprintf(log_file,"%s\n",logBuffer[i].asChar());
+            }
+        }
+        
+        fclose(log_file);
+    
+    // flush the log buffer;
+    logBuffer.clear();
+    //}
+    */
 }
 
 void* hydraDeviceNode::creator()
@@ -624,11 +679,17 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
 			outputJoystick[2] = 0;
             
             double3& zoomSpeed = zoomSpeedHandle.asDouble3();
-            
+
             double3& zoom = zoomHandle.asDouble3();
             zoom[0] = zoom[0] + (doubleData[8] * (zoom[0]/35 * zoomSpeed[0]));
             zoom[1] = zoom[1] + (doubleData[9] * (zoom[1]/35 * zoomSpeed[1]));            
             zoom[2] = 0;
+            
+            // limit zoom lens size
+            for (int i=0;i<3;i++){
+                if (zoom[i] < 12) zoom[i] = 12;
+                if (zoom[i] > 1200) zoom[i] = 1200;
+            }
             
             
 			block.setClean( plug );
@@ -708,7 +769,7 @@ static void hydraPreRollCB(float elapsedTime, float lastTime, void * data){
     // show a view message stating the time left until record
     printf ("elaps:%f, last:%f, count:%d\n", elapsedTime,lastTime,callbackCounter);
     if (callbackCounter == 0){
-        MString melCmd = "inViewMessage -smg (\"GO\") -fst 1 -fot 1 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        MString melCmd = "inViewMessage -smg (\"GO\") -fst 10 -fot 10 -fst 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
         MGlobal::executeCommand( melCmd );
         
         
@@ -735,19 +796,33 @@ static void hydraPostRecordCallback(bool state, void * data){
     printf ("%s \n", "playbackCB callback called");
     MAnimControl anim;
     MString melCmd;
-    if (state == false){
-        printf ("%s \n", "Playback State False");
-        //melCmd = "inViewMessage -smg (\"Finish\") -fst 100 -fot 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
-        //MGlobal::executeCommand( melCmd );
+    struct timeval tv;
     
-        // read the log file and make a take camera for it
+    if (state == false){
+        
+        // shutdown the device thread so it can write the log (DIDN"T WORK)
+        //melCmd = "setAttr hydraDevice1.live 0";
+        //MGlobal::executeCommand( melCmd );
+
+        //melCmd = "setAttr hydraDevice1.live 1";
+        //MGlobal::executeCommand( melCmd );
+        
+        // execute mel command to read the log file and make a take camera for it
         melCmd = "hydraCamFromLog -l \"sixense_data.txt\" -sc ";
         melCmd += gStartClock;
         melCmd += " -ec ";
-        double endClock = clock();
-        printf("END CLOCK TICK: %f",endClock);
+        
+        gettimeofday(&tv, NULL);
+        double endClock = tv.tv_sec+(tv.tv_usec*.000001);
+        printf("END CLOCK TICK: %f\n",endClock);
         melCmd += endClock;
+        MGlobal::executeCommandOnIdle(melCmd);
+        //MGlobal::executeCommand( melCmd );
+        
+        printf ("%s \n", "Playback State False");
+        melCmd = "inViewMessage -smg (\"Finish\") -fst 10 -fot 10 -fst 200 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
         MGlobal::executeCommand( melCmd );
+        
         
         // remove all callbacks
         for (unsigned int i=0; i < callbackIds.length(); i++ ) {
@@ -756,7 +831,8 @@ static void hydraPostRecordCallback(bool state, void * data){
         anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
     }
     else{
-        gStartClock = clock();
+        gettimeofday(&tv, NULL);
+        gStartClock = tv.tv_sec+(tv.tv_usec*.000001);
         printf("START CLOCK: %f\n",gStartClock);
         printf ("%s \n", "Playback State True");
     }
@@ -1029,14 +1105,16 @@ MStatus hydraCamFromLog::redoIt() {
         logData[i].split(' ', strVals);
         //printf ("%f, ",strVals[0].asDouble());
         
-        if (strVals[0].asDouble()>=startClock){
-            printf ("Found clock=%f startClock=%f\n", strVals[0].asDouble(),startClock);
-            printf("tx:%f ty:%f tz:%f rx:%f ry:%f rz:%f",strVals[1].asDouble(),strVals[2].asDouble(),strVals[3].asDouble(),strVals[4].asDouble(),strVals[5].asDouble(),strVals[6].asDouble());
+        if (strVals[0].asDouble()>=(startClock-.5)){
+            //printf ("Found clock=%f startClock=%f\n", strVals[0].asDouble(),startClock);
+            //printf("tx:%f ty:%f tz:%f rx:%f ry:%f rz:%f",strVals[1].asDouble(),strVals[2].asDouble(),strVals[3].asDouble(),strVals[4].asDouble(),strVals[5].asDouble(),strVals[6].asDouble());
 
             // map clock tick to maya timeline
             double clockDiff = strVals[0].asDouble() - startClock;
-            double seconds = startFrame.as(MTime::kSeconds) + (clockDiff/CLOCKS_PER_SEC);
-            double frame = startFrame.value()+((clockDiff/CLOCKS_PER_SEC)*24);
+            double seconds = startFrame.as(MTime::kSeconds) + clockDiff;
+            seconds += .07; // compensating for start time being slightly earlier than the first frame record.
+            
+            //double frame = startFrame.value()+((clockDiff/CLOCKS_PER_SEC)*24);
 
             // make this process the log data
             double tx = strVals[1].asDouble();
@@ -1049,8 +1127,10 @@ MStatus hydraCamFromLog::redoIt() {
             rx.setValue(strVals[4].asDouble());
             ry.setValue(strVals[5].asDouble());
             rz.setValue(strVals[6].asDouble());
+            
         
             MTime tm(seconds, MTime::kSeconds );
+            printf("tx:%f frame:%f seconds:%f clock:%f\n",tx,tm.as(MTime::kFilm),seconds,strVals[0].asDouble());
             if ( ( MS::kSuccess != acFnSetX.addKeyframe( tm, tx ) ) ||
                 ( MS::kSuccess != acFnSetY.addKeyframe( tm, ty ) ) ||
                 ( MS::kSuccess != acFnSetZ.addKeyframe( tm, tz ) ) ||
