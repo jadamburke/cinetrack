@@ -321,8 +321,8 @@ void hydraDeviceNode::threadHandler()
     //MStringArray logDirty;
     //logDirty.insert("false",0);
 
-    static FILE *log_file = 0;
-    log_file = fopen( "sixense_log.txt", "w" );
+    //static FILE *log_file = 0;
+    //log_file = fopen( "sixense_log.txt", "w" );
     
     
 	while ( ! isDone() )
@@ -443,6 +443,7 @@ void hydraDeviceNode::threadHandler()
             
             logBuffer.append(logBuffStr);
              */
+            /*
             struct timeval tv;
             gettimeofday(&tv,NULL);
             
@@ -456,6 +457,7 @@ void hydraDeviceNode::threadHandler()
                     printf("Log Write Fail:%f",((double)(tv.tv_sec+(tv.tv_usec*.000001))));
                 }
             }
+             */
             
             
 			pushThreadData( buffer );
@@ -698,6 +700,7 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
 
             // BUTTON PRESS HANDLING (THIS IS SHITTY WAY TO DO THIS, BUT WORKS)
             if (outputButtons == 0.001){
+                
                 printf ("%s \n", "Button 1 Press Detected.");
                 MStatus status;
                 MAnimControl anim;
@@ -709,6 +712,7 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
                     anim.setCurrentTime(minTime);
                     status = anim.playForward();
                 }
+
             }
             else if (outputButtons == 0.01){
                 printf ("%s \n", "Button 2 Press Detected.");
@@ -732,6 +736,10 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
             }
             else if (outputButtons == 100){
                 printf ("%s \n", "Button Bumper Press Detected.");
+                MString melCmd = "catchQuiet(eval(\"hydraUIDeviceButtonCB(";
+                melCmd += outputButtons;
+                melCmd += ")\"));";
+                MGlobal::executeCommand( melCmd );
                 
             }
             else if (outputButtons == 1000){
@@ -769,7 +777,7 @@ static void hydraPreRollCB(float elapsedTime, float lastTime, void * data){
     // show a view message stating the time left until record
     printf ("elaps:%f, last:%f, count:%d\n", elapsedTime,lastTime,callbackCounter);
     if (callbackCounter == 0){
-        MString melCmd = "inViewMessage -smg (\"GO\") -fst 10 -fot 10 -fst 100 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        MString melCmd = "inViewMessage -smg (\"GO\") -fit 10 -fot 10 -fst 50 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
         MGlobal::executeCommand( melCmd );
         
         
@@ -804,31 +812,41 @@ static void hydraPostRecordCallback(bool state, void * data){
         //melCmd = "setAttr hydraDevice1.live 0";
         //MGlobal::executeCommand( melCmd );
 
-        //melCmd = "setAttr hydraDevice1.live 1";
+        //melCmd = "hydraUIPostTakeRecord";
         //MGlobal::executeCommand( melCmd );
         
         // execute mel command to read the log file and make a take camera for it
-        melCmd = "hydraCamFromLog -l \"sixense_data.txt\" -sc ";
-        melCmd += gStartClock;
-        melCmd += " -ec ";
+        //melCmd = "hydraCamFromLog -l \"sixense_data.txt\" -sc ";
+        //melCmd += gStartClock;
+        //melCmd += " -ec ";
         
         gettimeofday(&tv, NULL);
         double endClock = tv.tv_sec+(tv.tv_usec*.000001);
         printf("END CLOCK TICK: %f\n",endClock);
-        melCmd += endClock;
-        MGlobal::executeCommandOnIdle(melCmd);
-        //MGlobal::executeCommand( melCmd );
+        //melCmd += endClock;
+        //MGlobal::executeCommandOnIdle(melCmd);
+        
+
         
         printf ("%s \n", "Playback State False");
-        melCmd = "inViewMessage -smg (\"Finish\") -fst 10 -fot 10 -fst 200 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
+        melCmd = "inViewMessage -smg (\"Finish\") -fit 10 -fot 10 -fst 200 -pos midCenter -fontSize 38 -bkc 0x00000000 -fade;";
         MGlobal::executeCommand( melCmd );
         
+        melCmd  = "setAttr hydraDevice1.live 0";
+        MGlobal::executeCommand( melCmd );
+        
+        melCmd = "hydraUIPostTakeRecord();";
+        MGlobal::executeCommandOnIdle( melCmd );
+
+
+        
+        anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
         
         // remove all callbacks
         for (unsigned int i=0; i < callbackIds.length(); i++ ) {
             MMessage::removeCallback( (MCallbackId)callbackIds[i] );
         }
-        anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
+        
     }
     else{
         gettimeofday(&tv, NULL);
