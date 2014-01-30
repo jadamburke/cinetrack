@@ -127,7 +127,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#ifdef __APPLE__
 #include <sys/time.h>
+#endif
 #include <math.h>
 
 
@@ -819,10 +821,11 @@ static void hydraPostRecordCallback(bool state, void * data){
         //melCmd = "hydraCamFromLog -l \"sixense_data.txt\" -sc ";
         //melCmd += gStartClock;
         //melCmd += " -ec ";
-        
+#ifdef WIN64
         gettimeofday(&tv, NULL);
         double endClock = tv.tv_sec+(tv.tv_usec*.000001);
         printf("END CLOCK TICK: %f\n",endClock);
+#endif
         //melCmd += endClock;
         //MGlobal::executeCommandOnIdle(melCmd);
         
@@ -849,9 +852,11 @@ static void hydraPostRecordCallback(bool state, void * data){
         
     }
     else{
+#ifdef __APPLE__
         gettimeofday(&tv, NULL);
         gStartClock = tv.tv_sec+(tv.tv_usec*.000001);
         printf("START CLOCK: %f\n",gStartClock);
+#endif
         printf ("%s \n", "Playback State True");
     }
 
