@@ -558,7 +558,7 @@ global proc hydraUIMakeLive(string $hydraNode){
 global proc hydraUIPostTakeRecord(){
 
 	// this just clears the live thread and logging. should do this better way
-	setAttr hydraDevice1.live 0;
+	//setAttr hydraDevice1.live 0;
 	hydraUIhydraCamDuplicate;
 	hydraUIClearRecordCurves;
 	evalDeferred("setAttr hydraDevice1.live 1");
@@ -569,13 +569,43 @@ global proc hydraUIPostTakeRecord(){
 
 global proc hydraUIDeviceButtonCB (float $buttonVal){
 
-	$modelEditor = `modelPanel -q -me hydraUIViewportPanel`;
-	modelEditor -e -activeView $modelEditor;
-	// bumper button pressed
-	if ($buttonVal == 100){
+	//$modelEditor = `modelPanel -q -me hydraUIViewportPanel`;
+	//modelEditor -e -activeView $modelEditor;
+
+    if ($buttonVal == 0.001){
+        
+        // button 1 pressed (toggles playback)
+        hydraUIPlayForward();
+    }
+    else if ($buttonVal == 0.01){
+        // button 2 pressed (was stop button)
+        
+    }
+    else if ($buttonVal == 0.1){
+    	// button 3 pressed
+    	eval("hydraRecord");
+
+    }
+    else if ($buttonVal == 1){
+        // button 4 pressed
+        
+    }
+    else if ($buttonVal == 10){
+        // start button pressed
+        
+    }
+    else if ($buttonVal == 100){
+    	// bumper button pressed
+
 		// cycle through hydra cameras including 
 		hydraUICycleThroughCameras();
-	}
+        
+    }
+    else if ($buttonVal == 1000){
+    	// joystick button pressed
+    	// go to nearest prime lens or next highest prime
+    }
+
 
 }
 
@@ -636,8 +666,12 @@ global proc hydraUIhydraCamDuplicate(){
 		// create a duplicate camera of hydraCam
 		string $newRig[] = `duplicate hydraRigOffset`;
 		string $dupedRig = `rename $newRig[0] ($angleName+"_"+$takeName+"Rig")`;
-		string $newCam[] = `listRelatives -children -fullPath -type transform $dupedRig`;//`duplicate hydraCam`;
+		string $newCam[] = `duplicate hydraCam`;
 		string $dupedCam = `rename $newCam[0] ($angleName+"_"+$takeName)`;
+		
+		//string $newCam[] = `listRelatives -children -fullPath -type transform $dupedRig`;//`duplicate hydraCam`;
+		string $newCamConst[] = `listRelatives -children -fullPath -type parentConstraint $dupedCam`;
+		string $dupedCamConst = `rename $newCamConst[0] ($angleName+"_"+$takeName+"_parentConstraint")`;
 		
 
 		// maps one attr to another
@@ -692,6 +726,22 @@ global proc hydraUIhydraCamDuplicate(){
 			setAttr ($angleGroupName+".scale") $val[0] $val[1] $val[2];
 		}
 		parent $dupedRig $angleGroupName;
+		parent $dupedCam $angleGroupName;
+
+		// hook up the duped constraint to the dupedrig
+		connectAttr ($dupedRig+".parentMatrix[0]") ($dupedCamConst+".target[0].targetParentMatrix");
+		connectAttr ($dupedRig+".scale") ($dupedCamConst+".target[0].targetScale");
+		connectAttr ($dupedRig+".rotateOrder") ($dupedCamConst+".target[0].targetRotateOrder");
+		connectAttr ($dupedRig+".rotate") ($dupedCamConst+".target[0].targetRotate");
+		connectAttr ($dupedRig+".rotatePivotTranslate") ($dupedCamConst+".target[0].targetRotateTranslate");
+		connectAttr ($dupedRig+".rotatePivot") ($dupedCamConst+".target[0].targetRotatePivot");
+		connectAttr ($dupedRig+".translate") ($dupedCamConst+".target[0].targetTranslate");
+
+		connectAttr ($dupedCamConst+".constraintRotateY") ($dupedCam+".rotateY");
+		connectAttr ($dupedCamConst+".constraintRotateX") ($dupedCam+".rotateX");
+		connectAttr ($dupedCamConst+".constraintTranslateX") ($dupedCam+".translateX");
+		connectAttr ($dupedCamConst+".constraintTranslateY") ($dupedCam+".translateY");
+		connectAttr ($dupedCamConst+".constraintTranslateZ") ($dupedCam+".translateZ");
 
 		// add values to store the hydraGroup's tranform
 		addAttr -ln "hydraOriginTranslate"  -at double3 $dupedCam;

@@ -158,6 +158,7 @@
 #include <maya/MPlug.h>
 #include <maya/MDataBlock.h>
 #include <maya/MFnNumericAttribute.h>
+#include <maya/MFnTypedAttribute.h>
 #include <maya/MPxThreadedDeviceNode.h>
 
 #include <maya/MTimerMessage.h>
@@ -178,12 +179,14 @@
 #include <sixense_utils/event_triggers.hpp>
 #include <sixense_utils/controller_manager/controller_manager.hpp>
 
+
 // ==========================================================================
 
 // hydraRecord Callback ID data store
 MCallbackIdArray callbackIds;
 int callbackCounter;
 double gStartClock;
+std::string controller_manager_text_string;
 
 class hydraDeviceNode : public MPxThreadedDeviceNode
 {
@@ -234,6 +237,7 @@ public:
     static MObject      zoomSpeedX;
     static MObject      zoomSpeedY;
     static MObject      zoomSpeedZ;
+	static MObject		hemiTracking;
 
 	static MTypeId		id;
 
@@ -275,6 +279,7 @@ MObject hydraDeviceNode::zoomSpeedX;
 MObject hydraDeviceNode::zoomSpeedY;
 MObject hydraDeviceNode::zoomSpeedZ;
 
+MObject hydraDeviceNode::hemiTracking;
 
 
 hydraDeviceNode::hydraDeviceNode() 
@@ -294,16 +299,9 @@ void hydraDeviceNode::postConstructor()
 	setRefreshOutputAttributes( attrArray );
 
 	// we'll be reading one set of translate x,y, z's at a time
-	createMemoryPools( 3, 10, sizeof(double));
+	createMemoryPools( 3, 11, sizeof(double));
     
     //createMemoryPools (12, 3, sizeof(Ptr)) ;
-}
-
-void hydraDeviceNode::threadHandler()
-{
-	MStatus status;
-	setDone( false );
-    
 	sixenseInit();
 	int curStep = sixenseUtils::getTheControllerManager()->getCurrentStep();
 	printf ("curStep :: %d \n", curStep);
@@ -312,11 +310,22 @@ void hydraDeviceNode::threadHandler()
 	//sixenseUtils::getTheControllerManager()->registerSetupCallback( controller_manager_setup_callback );
 	//sixenseUtils::getTheControllerManager()->setGameType( sixenseUtils::controller_manager::ONE_PLAYER_TWO_CONTROLLER );
 	printf ("curStep :: %d \n", curStep);
-	printf ("%s \n", "Hydra Input Device for Maya, version 0.1");
-	printf ("%s \n", "Author: Evan Harper (harper4@gmail.com), Adam Burke (adam@adamburke.net), Nov 2013");
+	printf ("%s \n", "Hydra Input Device for Maya, version 0.2");
+	
 
+
+	//
     //sixenseSetFilterEnabled(1);
-    //sixenseSetFilterParams(.2, 0, 1, .1);
+   // sixenseSetFilterParams(.2, 0, 1, .1);
+
+}
+
+void hydraDeviceNode::threadHandler()
+{
+	MStatus status;
+	setDone( false );
+    
+
 
     
     //MStringArray logBuffer;
@@ -348,7 +357,7 @@ void hydraDeviceNode::threadHandler()
             sixenseSetActiveBase(0);
             sixenseAllControllerData acd;
             sixenseGetAllNewestData( &acd );
-            
+			
             sixenseUtils::getTheControllerManager()->update( &acd );
             
             static sixenseUtils::ButtonStates left_states, right_states;
@@ -429,6 +438,7 @@ void hydraDeviceNode::threadHandler()
             doubleData[7] = buttonData;
             doubleData[8] = (double)acd.controllers[0].joystick_x;
             doubleData[9] = (double)acd.controllers[0].joystick_y;
+			doubleData[10] = (double)acd.controllers[0].hemi_tracking_enabled;
             
             // was trying to write to memory first, then to disk, but seems like same result
             /*
@@ -525,8 +535,14 @@ MStatus hydraDeviceNode::initialize()
 
 	MStatus status;
 	MFnNumericAttribute numAttr;
+
+
+	hemiTracking = numAttr.create("hemiTracking", "hemi",MFnNumericData::kBoolean,0,&status);
+	MCHECKERROR(status, "create hemiTracking");
+	ADD_ATTRIBUTE(hemiTracking);
+
     
- 
+
 	outputTranslateX = numAttr.create("outputTranslateX", "otx", MFnNumericData::kDouble, 0.0, &status);
 	MCHECKERROR(status, "create outputTranslateX");
 	outputTranslateY = numAttr.create("outputTranslateY", "oty", MFnNumericData::kDouble, 0.0, &status);
@@ -602,7 +618,6 @@ MStatus hydraDeviceNode::initialize()
 	zoomSpeed = numAttr.create("zoomSpeed", "zs", zoomSpeedX, zoomSpeedY, zoomSpeedZ, &status);
     MCHECKERROR(status, "create zoomSpeed");
     
-
 	ADD_ATTRIBUTE(outputTranslate);
 	ADD_ATTRIBUTE(outputRotate);
     ADD_ATTRIBUTE(offsetTranslate);
@@ -620,6 +635,7 @@ MStatus hydraDeviceNode::initialize()
     ATTRIBUTE_AFFECTS( outputTranslate, outputButtons);
     ATTRIBUTE_AFFECTS( outputTranslate, outputJoystick);
     ATTRIBUTE_AFFECTS( outputTranslate, zoom);
+	ATTRIBUTE_AFFECTS( outputTranslate, hemiTracking);
     
 
 
@@ -638,6 +654,8 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
 		if ( popThreadData(buffer) ) {
 			double* doubleData = reinterpret_cast<double*>(buffer.ptr());
             
+			MDataHandle hemiTrackingHandle = block.outputValue( hemiTracking, &status );
+            MCHECKERROR(status, "Error in block.outputValue for hemiTracking");
 
 			MDataHandle outputTranslateHandle = block.outputValue( outputTranslate, &status );
             MCHECKERROR(status, "Error in block.outputValue for outputTranslate");
@@ -660,6 +678,8 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
             MDataHandle zoomSpeedHandle = block.outputValue( zoomSpeed, &status );
             MCHECKERROR(status, "Error in block.outputValue for zoomSpeedHandle");
                      
+			bool& hemiTracking = hemiTrackingHandle.asBool();
+			hemiTracking = (bool)doubleData[10];
             
 			double3& outputTranslate = outputTranslateHandle.asDouble3();
 			outputTranslate[0] = (double)doubleData[0];
@@ -691,8 +711,13 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
             
             // limit zoom lens size
             for (int i=0;i<3;i++){
-                if (zoom[i] < 12) zoom[i] = 12;
-                if (zoom[i] > 1200) zoom[i] = 1200;
+				if (i == 1){
+					if (zoom[i] < 12) zoom[i] = 12;
+					if (zoom[i] > 1200) zoom[i] = 1200;
+				}
+				else{
+					if (zoom[i] < .01) zoom[i] = .01;
+				}
             }
             
             
@@ -700,6 +725,7 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
             
 			releaseDataStorage(buffer);
 
+			/*
             // BUTTON PRESS HANDLING (THIS IS SHITTY WAY TO DO THIS, BUT WORKS)
             if (outputButtons == 0.001){
                 
@@ -737,17 +763,22 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
                 
             }
             else if (outputButtons == 100){
-                printf ("%s \n", "Button Bumper Press Detected.");
-                MString melCmd = "catchQuiet(eval(\"hydraUIDeviceButtonCB(";
-                melCmd += outputButtons;
-                melCmd += ")\"));";
-                MGlobal::executeCommand( melCmd );
+
                 
             }
             else if (outputButtons == 1000){
                 printf ("%s \n", "Button Joystick Press Detected.");
 
             }
+			*/
+			
+			if (outputButtons > 0){
+				printf ("%s \n", "Button Press Detected.");
+                MString melCmd = "catchQuiet(eval(\"hydraUIDeviceButtonCB(";
+                melCmd += outputButtons;
+                melCmd += ")\"));";
+                MGlobal::executeCommand( melCmd );
+			}
   
 			return ( MS::kSuccess );
 		}
@@ -811,8 +842,8 @@ static void hydraPostRecordCallback(bool state, void * data){
     if (state == false){
         
         // shutdown the device thread so it can write the log (DIDN"T WORK)
-        //melCmd = "setAttr hydraDevice1.live 0";
-        //MGlobal::executeCommand( melCmd );
+        melCmd = "setAttr hydraDevice1.live 0";
+        MGlobal::executeCommand( melCmd );
 
         //melCmd = "hydraUIPostTakeRecord";
         //MGlobal::executeCommand( melCmd );
@@ -821,7 +852,7 @@ static void hydraPostRecordCallback(bool state, void * data){
         //melCmd = "hydraCamFromLog -l \"sixense_data.txt\" -sc ";
         //melCmd += gStartClock;
         //melCmd += " -ec ";
-#ifdef WIN64
+#ifdef __APPLE__
         gettimeofday(&tv, NULL);
         double endClock = tv.tv_sec+(tv.tv_usec*.000001);
         printf("END CLOCK TICK: %f\n",endClock);
@@ -843,7 +874,7 @@ static void hydraPostRecordCallback(bool state, void * data){
 
 
         
-        anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
+        //anim.setPlaybackMode(MAnimControl::kPlaybackLoop);
         
         // remove all callbacks
         for (unsigned int i=0; i < callbackIds.length(); i++ ) {
@@ -864,6 +895,65 @@ static void hydraPostRecordCallback(bool state, void * data){
 }
 
 
+
+void controllerManagerSetupCB( sixenseUtils::ControllerManager::setup_step step ) {
+	printf ("%s \n", "Setting Up Controllers");
+	if( sixenseUtils::getTheControllerManager()->isMenuVisible() ) {
+
+		// Turn on the flag that tells the graphics system to draw the instruction screen instead of the controller information. The game
+		// should be paused at this time.
+		//controller_manager_screen_visible = true;
+
+		// Ask the controller manager what the next instruction string should be.
+		controller_manager_text_string = sixenseUtils::getTheControllerManager()->getStepString();
+		printf ("%s \n", controller_manager_text_string);
+		// We could also load the supplied controllermanager textures using the filename: sixenseUtils::getTheControllerManager()->getTextureFileName();
+
+	} else {
+
+		// We're done with the setup, so hide the instruction screen.
+		//controller_manager_screen_visible = false;
+		printf ("%s \n", "Controller Setup Complete");
+
+	}
+
+}
+
+/////////////////////////////////////////
+// RUNS A CALIBRATION FOR THE HYDRA //
+/////////////////////////////////////////
+
+class hydraCalibrate : public MPxCommand
+{
+public:
+    MTimerMessage prerolltimer;
+    MConditionMessage recordFinished;
+    MStatus doIt( const MArgList& args );
+    bool isUndoable() const;
+    static void* creator();
+};
+
+MStatus hydraCalibrate::doIt( const MArgList& args ) {
+	int curStep = sixenseUtils::getTheControllerManager()->getCurrentStep();
+	printf ("curStep :: %d \n", curStep);
+	
+	sixenseUtils::getTheControllerManager()->registerSetupCallback( controllerManagerSetupCB );
+	sixenseUtils::getTheControllerManager()->setGameType( sixenseUtils::ControllerManager::ONE_PLAYER_TWO_CONTROLLER );
+	printf ("curStep :: %d \n", curStep);
+	printf ("%s \n", "Sixense Setup Init Finished");
+
+    return MS::kSuccess;
+}
+
+
+
+bool hydraCalibrate::isUndoable() const {
+    return false;
+}
+
+void* hydraCalibrate::creator() {
+    return new hydraCalibrate;
+}
 
 
 
@@ -894,7 +984,7 @@ MStatus hydraRecord::doIt( const MArgList& args ) {
     
     // set the playback head to the playback start time
     MAnimControl anim;
-    anim.setPlaybackMode(MAnimControl::kPlaybackOnce);
+    //anim.setPlaybackMode(MAnimControl::kPlaybackOnce);
     const MTime minTime = anim.minTime();
     anim.setCurrentTime(minTime);
     int c = 3;
@@ -1204,7 +1294,7 @@ MStatus initializePlugin( MObject obj )
 	if( !status ) {
 		status.perror("failed to registerNode hydraDeviceNode");
 	}
-    
+    plugin.registerCommand( "hydraCalibrate", hydraCalibrate::creator );
     plugin.registerCommand( "hydraRecord", hydraRecord::creator );
     plugin.registerCommand( "hydraCamFromLog", hydraCamFromLog::creator );
 
