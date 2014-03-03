@@ -83,7 +83,7 @@ global proc hydraUI () {
 		//button -l "New Job" -c "hydraUICreateNewJobUI;" -al "center" -h 26 ;
 
 		setParent hydraUILibForm;
-			frameLayout -parent hydraUILibForm -cll 0 -bs "etchedIn" -l "Hydra Cameras" hydraUIJobListFrmeLyt;
+			frameLayout -parent hydraUILibForm -cll 0 -bs "etchedIn" -l "Recorded Cameras" hydraUIJobListFrmeLyt;
 				string $jobLister = `treeView -numberOfButtons 0 -abr true -enk true -idc "hydraUITreeViewDblClk" -sc "hydraUISetActiveJob " -cmc "" hydraUIJobList`;
 			setParent ..;
 
@@ -109,18 +109,58 @@ global proc hydraUI () {
 						if (size($hydraDevices)>0)
 							hydraUISetDevice $hydraDevices[0];
 					setParent..;
+					frameLayout -cll 1 -cl 1 -bs "etchedIn" -l "Filter Presets" -bgc .2 .2 .2;
+						columnLayout;
+							rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
+								button -bgc .2 .2 .2 -w 110 -l "Low All" -al "center" -h 20 -c "";
+								button -bgc .2 .2 .2 -w 110 -l "Low Falloff" -al "center" -h 20 -c "";
+								setParent ..;
+							rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
+								button -bgc .2 .2 .2 -w 110 -l "Med All" -al "center" -h 20 -c "";
+								button -bgc .2 .2 .2 -w 110 -l "Med Falloff" -al "center" -h 20 -c "";
+							setParent ..;
+							rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
+								button -bgc .2 .2 .2 -w 110 -l "Hi All" -al "center" -h 20 -c "";
+								button -bgc .2 .2 .2 -w 110 -l "Hi Falloff" -al "center" -h 20 -c "";
+							setParent ..;
+						setParent ..;
+					setParent ..;
+						
 					rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
-						button -bgc .2 .2 .2 -w 100 -l "Ready Recording" -al "center" -h 20 -c "hydraUIMakeLive `optionMenuGrp -q -v hydraDeviceOM`";
-						button -bgc .2 .2 .2 -w 100 -l "View HydraCam" -al "center" -h 20 -c "hydraUIViewHydraCam hydraCam";
+						button -bgc .2 .2 .2 -w 110 -l "Calibrate" -al "center" -h 20 -c "hydraCalibrate";
+						button -bgc .2 .2 .2 -w 110 -l "Look Thru HydraCam" -al "center" -h 20 -c "hydraUIViewHydraCam hydraCam";
 						
 					setParent ..;
 					rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
-						button -bgc .2 .2 .2 -w 100 -l "Toggle Roll" -al "center" -h 20 -c "";
-						button -en 0 -bgc .2 .2 .2 -w 100 -l "Do Over" -al "center" -h 20 -c "";
+						button -bgc .2 .2 .2 -w 110 -l "Toggle Roll" -al "center" -h 20 -c "";
+						button -en 0 -bgc .2 .2 .2 -w 110 -l "Do Over" -al "center" -h 20 -c "";
 					setParent ..;
 					separator -style "none" -h 10;
 					optionMenuGrp -label "Record Angle:" -columnWidth 2 80 -cw 3 100 -cc "hydraUISetAngle `optionMenuGrp -q -v hydraAngleOM`" hydraAngleOM;
 					optionMenuGrp -label "Record Take:" -columnWidth 2 80 -cw 3 100 -cc "hydraUISetTake `optionMenuGrp -q -v hydraTakeOM`" hydraTakeOM;
+					button -bgc .8 .2 .2 -w 200 -l "Ready Recording" -al "center" -h 40 -c "hydraUIMakeLive `optionMenuGrp -q -v hydraDeviceOM`";
+					frameLayout -cll 1 -cl 1 -bs "etchedIn" -l "Ignore Record Attrs" -bgc .2 .2 .2;
+						rowLayout -numberOfColumns 4 -rat 2 "top" 0 -adj 1;
+							text -l "Translate";
+							checkBox -l "X (truck)";
+							checkBox -l "Y (pedestal)";
+							checkBox -l "Z (dolly)";
+						setParent ..;
+						rowLayout -numberOfColumns 4 -rat 2 "top" 0 -adj 1;
+							text -l "Rotate";
+							checkBox -l "X (pan)";
+							checkBox -l "Y (tilt)";
+							checkBox -l "Z (roll)";
+						setParent ..;
+						rowLayout -numberOfColumns 2 -rat 2 "top" 0 -adj 1;
+							text -l "Focal Length";
+							checkBox -l "mm";
+						setParent ..;
+						rowLayout -numberOfColumns 2 -rat 2 "top" 0 -adj 1;
+							text -l "Focal Distance";
+							checkBox -l "mm";
+						setParent ..;
+					setParent ..;
 				setParent..;
 			setParent..;
 		setParent..;
@@ -273,7 +313,10 @@ global proc hydraUISetDevice(string $hydraNode){
 	}
 	setParent hydraUIDeviceAttrLyt;
 	attrControlGrp -attribute ($hydraNode+".live");
+	attrControlGrp -attribute ($hydraNode+".hemiTracking");
 	attrControlGrp -attribute ($hydraNode+".frameRate");
+	attrControlGrp -attribute ($hydraNode+".filter");
+	
 }
 
 

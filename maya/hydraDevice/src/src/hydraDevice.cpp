@@ -238,6 +238,11 @@ public:
     static MObject      zoomSpeedY;
     static MObject      zoomSpeedZ;
 	static MObject		hemiTracking;
+	static MObject		filter;
+	static MObject		filterMin;
+	static MObject		filterMax;
+	static MObject		filterRangeMin;
+	static MObject		filterRangeMax;
 
 	static MTypeId		id;
 
@@ -280,6 +285,12 @@ MObject hydraDeviceNode::zoomSpeedY;
 MObject hydraDeviceNode::zoomSpeedZ;
 
 MObject hydraDeviceNode::hemiTracking;
+
+MObject hydraDeviceNode::filter;
+MObject hydraDeviceNode::filterMin;
+MObject hydraDeviceNode::filterMax;
+MObject hydraDeviceNode::filterRangeMin;
+MObject hydraDeviceNode::filterRangeMax;
 
 
 hydraDeviceNode::hydraDeviceNode() 
@@ -334,7 +345,8 @@ void hydraDeviceNode::threadHandler()
 
     //static FILE *log_file = 0;
     //log_file = fopen( "sixense_log.txt", "w" );
-    
+
+
     
 	while ( ! isDone() )
 	{
@@ -351,7 +363,7 @@ void hydraDeviceNode::threadHandler()
 		beginThreadLoop();
 		{
             const double pi = 3.14159265358979323846; // CHANGE THIS TO LIBRARY CONST
-            const double world_scale = 0.02;
+            const double world_scale = 0.1; // convert millimeter units to centimeters to match maya
             
             //printf ("%s \n", "Getting Data");
             sixenseSetActiveBase(0);
@@ -364,9 +376,9 @@ void hydraDeviceNode::threadHandler()
             left_states.update( &acd.controllers[0] );
             right_states.update( &acd.controllers[1] );
             
-			double p_x = (double)acd.controllers[0].pos[0]; 
-			double p_y = (double)acd.controllers[0].pos[1]; 
-			double p_z = (double)acd.controllers[0].pos[2];   
+			double p_x = (double)acd.controllers[0].pos[0] * world_scale; 
+			double p_y = (double)acd.controllers[0].pos[1] * world_scale; 
+			double p_z = (double)acd.controllers[0].pos[2] * world_scale;   
                         
             
             double q_x = (double)acd.controllers[0].rot_quat[0];
@@ -385,7 +397,7 @@ void hydraDeviceNode::threadHandler()
             q_vec.x = q_x;
             q_vec.y = q_y;
             q_vec.z = q_z;
-            
+
             
             double buttonData = 0.0;
             if( left_states.buttonJustPressed( SIXENSE_BUTTON_1 ) ) {
@@ -425,9 +437,9 @@ void hydraDeviceNode::threadHandler()
 
             double* doubleData = reinterpret_cast<double*>(buffer.ptr());
             
-			doubleData[0] = (double)p_vec.x * world_scale; 
-			doubleData[1] = (double)p_vec.y * world_scale;
-			doubleData[2] = (double)p_vec.z * world_scale;
+			doubleData[0] = (double)p_vec.x; 
+			doubleData[1] = (double)p_vec.y;
+			doubleData[2] = (double)p_vec.z;
              
             doubleData[3] = (double)er_vec.x * (180/pi); 
 			doubleData[4] = (double)er_vec.y * (180/pi); 
@@ -541,7 +553,25 @@ MStatus hydraDeviceNode::initialize()
 	MCHECKERROR(status, "create hemiTracking");
 	ADD_ATTRIBUTE(hemiTracking);
 
-    
+	filter = numAttr.create("filter", "ft",MFnNumericData::kBoolean,0,&status);
+	MCHECKERROR(status, "create filter");
+    ADD_ATTRIBUTE(filter);
+
+	filterMin = numAttr.create("filterMin", "ftmn",MFnNumericData::kDouble,0.0,&status);
+	MCHECKERROR(status, "create filterMin");
+    ADD_ATTRIBUTE(filterMin);
+
+	filterMax = numAttr.create("filterMax", "ftmx",MFnNumericData::kDouble,.5,&status);
+	MCHECKERROR(status, "create filterMax");
+    ADD_ATTRIBUTE(filterMax);
+
+	filterRangeMin = numAttr.create("filterRangeMin", "frmn",MFnNumericData::kDouble,800,&status);
+	MCHECKERROR(status, "create filterRangeMin");	
+	ADD_ATTRIBUTE(filterRangeMin);
+
+	filterRangeMax = numAttr.create("filterRangeMax", "frmx",MFnNumericData::kDouble,1500,&status);
+	MCHECKERROR(status, "create filterRangeMax");	
+	ADD_ATTRIBUTE(filterRangeMax);
 
 	outputTranslateX = numAttr.create("outputTranslateX", "otx", MFnNumericData::kDouble, 0.0, &status);
 	MCHECKERROR(status, "create outputTranslateX");
@@ -653,6 +683,8 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
 
 		if ( popThreadData(buffer) ) {
 			double* doubleData = reinterpret_cast<double*>(buffer.ptr());
+
+
             
 			MDataHandle hemiTrackingHandle = block.outputValue( hemiTracking, &status );
             MCHECKERROR(status, "Error in block.outputValue for hemiTracking");
@@ -786,6 +818,47 @@ MStatus hydraDeviceNode::compute( const MPlug& plug, MDataBlock& block ) {
 			return MS::kFailure;
 		}
 	}
+	
+	// set the filtering options
+	MDataHandle filterHandle = block.outputValue( filter, &status );
+	MCHECKERROR(status, "Error in block.outputValue for filter");
+	int& fon = filterHandle.asInt();
+	int gfl = 0;
+	sixenseGetFilterEnabled(&gfl);
+
+
+	if (gfl != fon){
+			printf ("%s %d\n","sixenseSetFilterEnabled was ",gfl);
+			//printf ("%s \n", "Filter Param Changed, updateing Sixense Filtering");
+			// set the filtering options
+			MDataHandle filterHandle = block.outputValue( filter, &status );
+			MCHECKERROR(status, "Error in block.outputValue for filter");
+
+			MDataHandle filterMinHandle = block.outputValue( filterMin, &status );
+			MCHECKERROR(status, "Error in block.outputValue for filterMin");
+
+			MDataHandle filterMaxHandle = block.outputValue( filterMax, &status );
+			MCHECKERROR(status, "Error in block.outputValue for filterMax");
+    
+			MDataHandle filterRangeMinHandle = block.outputValue( filterRangeMin, &status );
+			MCHECKERROR(status, "Error in block.outputValue for filterRangeMin");
+
+			MDataHandle filterRangeMaxHandle = block.outputValue( filterRangeMax, &status );
+			MCHECKERROR(status, "Error in block.outputValue for filterRangeMax");
+
+			int& fon = filterHandle.asInt();
+			double& fmin = filterMinHandle.asDouble();
+			double& fmax = filterMaxHandle.asDouble();
+			double& frmin = filterRangeMinHandle.asDouble();
+			double& frmax = filterRangeMaxHandle.asDouble();
+
+			int stat = sixenseSetFilterEnabled(fon);
+			if (fon == 1){
+				stat = sixenseSetFilterParams(frmin,fmin, frmax, fmax);
+			}
+	}
+	
+
     
 	return ( MS::kUnknownParameter );
 }
