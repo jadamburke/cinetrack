@@ -363,7 +363,7 @@ void hydraDeviceNode::threadHandler()
 		beginThreadLoop();
 		{
             const double pi = 3.14159265358979323846; // CHANGE THIS TO LIBRARY CONST
-            const double world_scale = 0.1; // convert millimeter units to centimeters to match maya
+            const double world_scale = 0.01; // convert millimeter units to centimeters to match maya
             
             //printf ("%s \n", "Getting Data");
             sixenseSetActiveBase(0);

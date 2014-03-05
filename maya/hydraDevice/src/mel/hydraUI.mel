@@ -73,7 +73,7 @@ global proc hydraUI () {
 						setParent ..;
 						rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
 							button -bgc .2 .2 .2 -w 100 -l "Delete" -al "center" -h 20 -c "";
-							button -en 0 -bgc .2 .2 .2 -w 100 -l "Do Over" -al "center" -h 20 -c "";
+							button -en 1 -bgc .2 .2 .2 -w 100 -l "Init hydraCam" -al "center" -h 20 -c "hydraUISetupRecord";
 						setParent ..;
 						separator -style "none" -h 5;
 					
@@ -133,7 +133,7 @@ global proc hydraUI () {
 					setParent ..;
 					rowLayout -numberOfColumns 3 -rat 2 "top" 0 -adj 1;
 						button -bgc .2 .2 .2 -w 110 -l "Toggle Roll" -al "center" -h 20 -c "";
-						button -en 0 -bgc .2 .2 .2 -w 110 -l "Do Over" -al "center" -h 20 -c "";
+						button -en 1 -bgc .2 .2 .2 -w 110 -l "init HydraCam" -al "center" -h 20 -c "hydraUISetupRecord";
 					setParent ..;
 					separator -style "none" -h 10;
 					optionMenuGrp -label "Record Angle:" -columnWidth 2 80 -cw 3 100 -cc "hydraUISetAngle `optionMenuGrp -q -v hydraAngleOM`" hydraAngleOM;
@@ -616,28 +616,34 @@ global proc hydraUIDeviceButtonCB (float $buttonVal){
 	//modelEditor -e -activeView $modelEditor;
 
     if ($buttonVal == 0.001){
-        
+        print ("BUTTON 1 PRESSED\n");
         // button 1 pressed (toggles playback)
         hydraUIPlayForward();
     }
     else if ($buttonVal == 0.01){
+    	print ("BUTTON 2 PRESSED\n");
         // button 2 pressed (was stop button)
         
     }
     else if ($buttonVal == 0.1){
+    	print ("BUTTON 3 PRESSED\n");
     	// button 3 pressed
     	eval("hydraRecord");
 
     }
     else if ($buttonVal == 1){
+    	print ("BUTTON 4 PRESSED\n");
         // button 4 pressed
+        hydraUIhydraCamDuplicate();
         
     }
     else if ($buttonVal == 10){
+    	print ("BUTTON 5 PRESSED\n");
         // start button pressed
         
     }
     else if ($buttonVal == 100){
+    	print ("BUTTON BUMPER PRESSED\n");
     	// bumper button pressed
 
 		// cycle through hydra cameras including 
@@ -645,8 +651,11 @@ global proc hydraUIDeviceButtonCB (float $buttonVal){
         
     }
     else if ($buttonVal == 1000){
+    	print ("JOYSTICK BUTTON PRESSED\n");
     	// joystick button pressed
     	// go to nearest prime lens or next highest prime
+    	hydraUINearestPrime();
+    	
     }
 
 
@@ -865,3 +874,52 @@ global proc hydraUIDeleteRecordRig (){
 
 
 
+global proc hydraUINearestPrime (){
+
+	float $primes[] = {12,14,16,18,21,25,27,32,35,40,50,65,75,85,100,135,150,180,200,250,300,350,400};
+	float $primesAppr[] = {14,16,18,21,25,27,32,35,40,50,65,75,100,135,150,180,200,250,300};
+	float $newPrime = 12.1;
+	if (`objExists hydraDevice1`){
+		$fl = `getAttr hydraDevice1.zoomY`;
+		float $each = 0;
+		for ($i=0;$i<size($primes)-1;$i++){
+			if ($fl >= $primes[$i] && $fl <= $primes[$i+1]){
+				$newPrime = $primes[$i+1];
+			}
+		}
+		setAttr hydraDevice1.zoomY $newPrime;
+		print ("Setting focalLength:"+$fl+" to nearest prime "+$newPrime+"\n");
+
+	}
+
+}
+
+
+global proc hydraUIPlayblastCamera(){
+
+
+
+	
+}
+
+global proc hydraUISetupRecord(){
+	 $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraTranslateX ($r+".input");
+ $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraTranslateY ($r+".input");
+ $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraTranslateZ ($r+".input");
+ $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraRotateX ($r+".input");
+ $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraRotateY ($r+".input");
+ $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraRotateZ ($r+".input");
+ $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraZoomX ($r+".input");
+ $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraZoomY ($r+".input");
+ $r = `createNode record`;
+ connectAttr hydraActiveTake.hydraZoomZ ($r+".input");
+
+}
