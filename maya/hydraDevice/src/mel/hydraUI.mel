@@ -894,11 +894,69 @@ global proc hydraUINearestPrime (){
 
 }
 
-
-global proc hydraUIPlayblastCamera(){
-
+global proc hydraUIPlaybastAllCams (){
 
 
+}
+
+
+global proc hydraUIPPPlayblastCamera(string $cameraName){
+
+	string $currentScene = `file -q -sn`;
+	string $currentSceneName = `basenameEx $currentScene`;
+	string $shotInfo[] = abxShotsGetFromPath($currentScene);
+	string $renderPath = ($shotInfo[0]+"/"+$shotInfo[1]+"/RENDER/"+$shotInfo[2]+"/");
+	string $pbPath  = ($renderPath+$shotInfo[3]+"/"+$shotInfo[3]+"_"+$shotInfo[4]+"/playblasts/"+$currentSceneName);
+
+
+	int $imgWidth = 1920;
+	int $imgHeight = 1080;
+	float $aspect = 1;
+	float $startFr = `playbackOptions -q -min`;
+	float $endFr = `playbackOptions -q -max`;
+
+	// check for project defaults file and get settings from there
+	if (`exists abxProjectGetShotDetails`){
+		string $prjDetails[] = abxProjectGetShotDetails(`workspace -q -rd`);
+		if (size($prjDetails)>7){
+			$lock = $prjDetails[0];
+			$fps = $prjDetails[1];
+			$imgWidth = $prjDetails[2];
+			$imgHeight = $prjDetails[3];
+			$hA = $prjDetails[5];
+			$hV =  $prjDetails[6];
+			$aspect = $prjDetails[4];
+			$sceneScale = $prjDetails[7];
+			$renderer = $prjDetails[8];
+		}	
+		else{
+			warning("Project Defaults File Not Found. Reverting to 1920 X 1080");
+		}
+	}
+	else {
+		warning("abxProject.mel not sourced. Skipping project defaults check.");
+	}
+
+	string $activePanel = `getPanel -withFocus`; 
+	// if the viewport is the stereo panel then switch back to the normal modelPanel 
+	select -clear;
+	if (`modelPanel -q -exists $activePanel`){
+
+		if (!`objExists $cameraName`){
+			$result = `confirmDialog -title "No renderCam Found" -message "There is no 'renderCam' found. Please rename your main camera to 'renderCam' (case-sensitive)" -button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK"`;
+			return;
+		}
+			//error ($cameraName+" does not exist. Please conform your scene or make your main camera named "+$cameraName+"\n");
+		
+		setAttr ($cameraName+".overscan") 1;
+
+		lookThroughModelPanel $cameraName $activePanel;
+		modelEditor -e -allObjects false -ignorePanZoom true $activePanel;
+		modelEditor -e -grid false -cameras true -strokes true -nurbsSurfaces true -polymeshes true -dynamics true -fluids true -nParticles true $activePanel;
+		// print (`playblast -ae`+"\n");\
+		ppPlayblastDoBlast2 $cameraName $pbPath ($currentSceneName+"_"+$cameraName) "png" $startFr $endFr $imgWidth $imgHeight $doCommit $shotInfo[3];
+
+	}
 	
 }
 
@@ -921,5 +979,10 @@ global proc hydraUISetupRecord(){
  connectAttr hydraActiveTake.hydraZoomY ($r+".input");
  $r = `createNode record`;
  connectAttr hydraActiveTake.hydraZoomZ ($r+".input");
+
+}
+
+// freezes the animation curves in a scene 
+global proc hydraUIFreezeAnim(){
 
 }
