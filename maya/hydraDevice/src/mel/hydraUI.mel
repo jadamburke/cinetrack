@@ -83,8 +83,10 @@ global proc hydraUI () {
 		//button -l "New Job" -c "hydraUICreateNewJobUI;" -al "center" -h 26 ;
 
 		setParent hydraUILibForm;
-			frameLayout -parent hydraUILibForm -cll 0 -bs "etchedIn" -l "Recorded Cameras" hydraUIJobListFrmeLyt;
-				string $jobLister = `treeView -numberOfButtons 0 -abr true -enk true -idc "hydraUITreeViewDblClk" -sc "hydraUISetActiveJob " -cmc "" hydraUIJobList`;
+			frameLayout -parent hydraUILibForm -cll 0 -bs "etchedIn" -l "Recorded Cameras" hydraUICamListFrmeLyt;
+				string $jobLister = `treeView -numberOfButtons 0 -abr true -enk true -idc "hydraUITreeViewDblClk" -sc "hydraUISetActiveJob " -cmc "hydraUICamUpdateMenu" hydraUICamList`;
+				string $pMenu = `popupMenu -parent $jobLister hydraUICamPopupMenu`;
+				hydraUIBuildCamMenu ($jobLister);
 			setParent ..;
 
 		
@@ -189,10 +191,10 @@ global proc hydraUI () {
         	hydraUIWindowMainForm;
 
 		formLayout -e 
-			-af hydraUIJobListFrmeLyt left 5
-			-af hydraUIJobListFrmeLyt top 0
-			-af hydraUIJobListFrmeLyt right 2
-			-af hydraUIJobListFrmeLyt bottom 5
+			-af hydraUICamListFrmeLyt left 5
+			-af hydraUICamListFrmeLyt top 0
+			-af hydraUICamListFrmeLyt right 2
+			-af hydraUICamListFrmeLyt bottom 5
 			hydraUILibForm;
 
 
@@ -222,7 +224,7 @@ global proc hydraUI () {
 
 		showWindow hydraUIWindow;
 
-		hydraUIPopulateList hydraUIJobList;
+		hydraUIPopulateList hydraUICamList;
 		// CB - don't defer this, user is waiting
 		//evalDeferred("hydraUISelectCurrentProject");
 		//eval("hydraUISelectCurrentProject");
@@ -237,7 +239,7 @@ global proc hydraUI () {
 		paneLayout -e -paneSize 3 20 80  hydraUIMainPane;
 		paneLayout -e -paneSize 4 20 10  hydraUIMainPane;	
 		//hydraUISelectCurrentProject;
-		hydraUIPopulateList hydraUIJobList;
+		hydraUIPopulateList hydraUICamList;
 	}
 
 	// setup script jobs
@@ -245,6 +247,37 @@ global proc hydraUI () {
 	$gHydraUIjobId[size($gHydraUIjobId)] = `scriptJob -e "NameChanged" hydraUINodeWatch`;
 	$gHydraUIjobId[size($gHydraUIjobId)] = `scriptJob -e "NewSceneOpened" hydraUINodeWatch`;
 	$gHydraUIjobId[size($gHydraUIjobId)] = `scriptJob -e "SceneOpened" hydraUINodeWatch`;
+}
+
+
+global proc hydraUIBuildCamMenu (string $camLister) {
+
+
+	// delete the current popup menu items
+	string $popupMenus[] = `treeView -q -pma $camLister`;
+	string $labelMenuItem = ("hydraUICamListMenuLabel");
+	for ($each in $popupMenus){
+		menuItem -parent $each -label ("Dept:"+"TakeName") $labelMenuItem;
+		menuItem -parent $each -divider 1;
+		menuItem -parent $each -en 1 -label "Playblast" -c ("hydraUIPPPlayblastCamera  \"none\" 1") "hydraUICamMenuPlayblast";
+		menuItem -parent $each -en 1 -label "Playblast (Send to Edit)" -c ("hydraUIPPPlayblastCamera  \"none\" 2") "hydraUICamMenuPlayblastCommit";
+			
+	}
+}
+
+global proc int hydraUICamUpdateMenu (string $itemName) {
+
+	treeView -e -cs "hydraUICamList";
+	treeView -e -si $itemName 1 "hydraUICamList";
+	
+	string $itemNamesShort[] = stringToStringArray($itemName,"|");
+	menuItem -e -label $itemNamesShort[1] ("hydraUICamListMenuLabel");
+	menuItem -e -c ("hydraUIPPPlayblastCamera  \""+$itemNamesShort[1]+"\" 2") "hydraUICamMenuPlayblast";
+	menuItem -e -c ("hydraUIPPPlayblastCamera  \""+$itemNamesShort[1]+"\" 1") "hydraUICamMenuPlayblastCommit";
+
+	hydraUISetActiveJob($itemName,1);
+	return true;
+
 }
 
 global proc hydraUIPlayForward(){
@@ -271,6 +304,16 @@ global proc hydraUIPlayForward(){
 
 global proc int hydraUITreeViewDblClk (string $itemName){
 	hydraUIViewHydraCam ($itemName);
+	string $itemNamesShort[] = stringToStringArray($itemName,"|");
+	//if (`attributeExists "clipMin" $itemName`){
+		$clipMin = `getAttr ($itemName+".clipStart")`;
+		playbackOptions -e -min $clipMin;
+	//}
+	//if (`attributeExists "clipMax" $itemName`){
+		$clipMax = `getAttr ($itemName+".clipEnd")`;
+		playbackOptions -e -max $clipMax;
+	//}
+	
 	select $itemName;
 	return true;
 }
@@ -278,22 +321,12 @@ global proc int hydraUITreeViewDblClk (string $itemName){
 
 global proc int hydraUISetActiveJob (string $takeName, int $state) {
 
-
 	if ($state == 1){
-		treeView -e -textColor $takeName .2 .2 .2 hydraUIJobList;
-		//print ("disabled button\n");
-		//button -e -en 0 hydraUIBtnRefresh;
-		//hydraUIRefreshDetailsUI2 ("");
+		treeView -e -textColor $takeName .2 .2 .2 hydraUICamList;
 		hydraUIRefreshDetailsUI $takeName;
-		//print ("set job to "+$takeName+"\n");
-
-		// refresh the details
-
-		
 	}
 	else {
-		treeView -e -textColor $takeName .8 .8 .8 hydraUIJobList;
-
+		treeView -e -textColor $takeName .8 .8 .8 hydraUICamList;
 	}
 	return  1;
 
@@ -367,6 +400,7 @@ global proc string[] hydraUIGetTakes (string $angle){
 
 global proc hydraUIRefreshAngleTake(){
 
+	//if (`optionMenu -q -exists hydraAngleOM`){
 	global string $gHydraUIActiveAngle;
 	if ($gHydraUIActiveAngle == "") $gHydraUIActiveAngle = "New Angle";
 
@@ -398,6 +432,7 @@ global proc hydraUIRefreshAngleTake(){
 		menuItem -parent "hydraTakeOM|OptionMenu" -label $ea;
 	}
 	menuItem -parent "hydraTakeOM|OptionMenu" -label "New Take";
+//}
 
 }
 
@@ -475,8 +510,8 @@ global proc string hydraUICamNiceName (string $camName){
 
 global proc hydraUINodeWatch (){
 	print ("NEW NODE DETECTED: REFRESHING HYDRA UI\n");
-	if (`treeView -exists hydraUIJobList`)
-		hydraUIPopulateList hydraUIJobList;
+	if (`treeView -exists hydraUICamList`)
+		hydraUIPopulateList hydraUICamList;
 	hydraUIRefreshAngleTake();
 }
 
@@ -762,8 +797,8 @@ global proc hydraUIhydraCamDuplicate(){
 		}
 		// need to conver TU curves to TA for rotation values to avoid unit conversion
 
-		addAttr -ln "showInHydraUI"  -at bool $dupedCam;
-		setAttr ($dupedCam+".showInHydraUI") 1;
+		// add customAttrs
+		hydraUIAddCustomCamAttrs($dupedCam);
 
 		// create the angle group if it does not already exist
 		$angleGroupName = ($angleName+"Grp");
@@ -833,8 +868,42 @@ global proc hydraUIhydraCamDuplicate(){
 		    addAttr -ln "hydraRigScaleY" -at double -parent "hydraRigScale" $dupedCam;
 		    addAttr -ln "hydraRigScaleZ" -at double -parent "hydraRigScale" $dupedCam;
 
+
 		hydraUISetAngle($angleName);
 	}
+}
+
+global proc hydraUIAddCustomCamAttrs(string $dupedCam){
+
+		string $curDate = python("time.time()");
+		if (!`attributeExists "showInHydraUI" $dupedCam`){
+			addAttr -ln "showInHydraUI"  -at bool $dupedCam;
+			setAttr ($dupedCam+".showInHydraUI") 1;
+		}
+		if (!`attributeExists "clipStart" $dupedCam`){
+			addAttr -ln "clipStart"  -at double $dupedCam;
+			setAttr -e -keyable 0 ($dupedCam+".clipStart") `playbackOptions -q -min`;
+		}
+		if (!`attributeExists "clipEnd" $dupedCam`){
+			addAttr -ln "clipEnd"  -at double  $dupedCam;
+			setAttr -e -keyable 0 ($dupedCam+".clipEnd") `playbackOptions -q -max`;
+		}
+		if (!`attributeExists "preRoll" $dupedCam`){
+			addAttr -ln "preRoll"  -at double $dupedCam;
+			setAttr -e -keyable 0 ($dupedCam+".preRoll");
+		}
+		if (!`attributeExists "postRoll" $dupedCam`){
+			addAttr -ln "postRoll"  -at double  $dupedCam;
+			setAttr -e -keyable 0 ($dupedCam+".postRoll") 0;
+		}
+		if (!`attributeExists "user" $dupedCam`){
+			addAttr -ln "user"  -dt "string"  $dupedCam;
+			setAttr -e -keyable 0 -type "string" ($dupedCam+".user") `getenv USER`;
+		}
+		if (!`attributeExists "dateRecorded" $dupedCam`){
+			addAttr -ln "dateRecorded"  -dt "string" $dupedCam;
+			setAttr -e -keyable 0 -type "string" ($dupedCam+".dateRecorded") $curDate;
+		}
 }
 
 global proc hydraUIClearRecordCurves(){
@@ -894,13 +963,14 @@ global proc hydraUINearestPrime (){
 
 }
 
-global proc hydraUIPlaybastAllCams (){
+global proc hydraUIPlaybastSelectedCams (){
+
 
 
 }
 
-
-global proc hydraUIPPPlayblastCamera(string $cameraName){
+// commit 0 = no, 1 = yes (no prompt), 2 = prompt user
+global proc hydraUIPPPlayblastCamera(string $cameraName, int $doCommit){
 
 	string $currentScene = `file -q -sn`;
 	string $currentSceneName = `basenameEx $currentScene`;
@@ -908,12 +978,20 @@ global proc hydraUIPPPlayblastCamera(string $cameraName){
 	string $renderPath = ($shotInfo[0]+"/"+$shotInfo[1]+"/RENDER/"+$shotInfo[2]+"/");
 	string $pbPath  = ($renderPath+$shotInfo[3]+"/"+$shotInfo[3]+"_"+$shotInfo[4]+"/playblasts/"+$currentSceneName);
 
-
 	int $imgWidth = 1920;
 	int $imgHeight = 1080;
 	float $aspect = 1;
 	float $startFr = `playbackOptions -q -min`;
 	float $endFr = `playbackOptions -q -max`;
+
+	//string $camTransform[] = `listRelatives -parent $cameraName`;
+	//if (`objectType $camTransform[0]` ==  "transform"){
+		print ("Reading Clip Time from "+$cameraName+"\n");
+		if (`attributeExists "clipStart" $cameraName`)
+			$startFr = `getAttr ($cameraName+".clipStart")`;
+		if (`attributeExists "clipEnd" $cameraName`)
+			$endFr = `getAttr ($cameraName+".clipEnd")`;
+	//}
 
 	// check for project defaults file and get settings from there
 	if (`exists abxProjectGetShotDetails`){
@@ -943,7 +1021,7 @@ global proc hydraUIPPPlayblastCamera(string $cameraName){
 	if (`modelPanel -q -exists $activePanel`){
 
 		if (!`objExists $cameraName`){
-			$result = `confirmDialog -title "No renderCam Found" -message "There is no 'renderCam' found. Please rename your main camera to 'renderCam' (case-sensitive)" -button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK"`;
+			$result = `confirmDialog -title "No renderCam Found" -message ("There is no camera called "+$cameraName+" found.") -button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK"`;
 			return;
 		}
 			//error ($cameraName+" does not exist. Please conform your scene or make your main camera named "+$cameraName+"\n");
@@ -952,7 +1030,7 @@ global proc hydraUIPPPlayblastCamera(string $cameraName){
 
 		lookThroughModelPanel $cameraName $activePanel;
 		modelEditor -e -allObjects false -ignorePanZoom true $activePanel;
-		modelEditor -e -grid false -cameras true -strokes true -nurbsSurfaces true -polymeshes true -dynamics true -fluids true -nParticles true $activePanel;
+		modelEditor -e -grid false -cameras false -strokes true -nurbsSurfaces true -polymeshes true -dynamics true -fluids true -nParticles true $activePanel;
 		// print (`playblast -ae`+"\n");\
 		ppPlayblastDoBlast2 $cameraName $pbPath ($currentSceneName+"_"+$cameraName) "png" $startFr $endFr $imgWidth $imgHeight $doCommit $shotInfo[3];
 
@@ -982,7 +1060,27 @@ global proc hydraUISetupRecord(){
 
 }
 
-// freezes the animation curves in a scene 
-global proc hydraUIFreezeAnim(){
+// freezes the animation curves in a scene and disables all time based evaluations accept for constraints
+global proc hydraUIFreezeAnim(){	
+
+	setState("all", 0);
+	setState "constraints" on;
+
+	if (`objExists "frozenTime"`) delete "frozenTime";
+
+	$frozenTime = `createNode -ss -n "frozenTime" time`;
+	setAttr ($frozenTime+".outTime") `currentTime -q`;
+	$curves = `ls -type animCurveTU -type animCurveTT -type animCurveTA -type animCurveTL`;
+	string $each;
+	for ($each in $curves){
+		catchQuiet(eval("connectAttr "+$frozenTime+".outTime "+$each+".input;"));
+	}
+
+}
+
+global proc hydraUIUnFreezeAnim(){
+
+	setState("all", 1);
+	if (`objExists "frozenTime"`) delete "frozenTime";
 
 }
